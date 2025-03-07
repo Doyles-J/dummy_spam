@@ -1,13 +1,64 @@
-<!DOCTYPE html>
-<html lang="">
+<!-- <!DOCTYPE html>
+<html lang="ko">
   <head>
     <meta charset="UTF-8">
     <link rel="icon" href="/favicon.ico">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vite App</title>
+    <title>모의악성메일 발송시스템</title>
   </head>
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.js"></script>
   </body>
+</html> -->
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>모의 악성메일 발송 시스템</title>
+  <!-- Include Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include Vue.js -->
+  <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+</head>
+<body class="bg-gray-50 min-h-screen">
+  <script type="module" src="/src/main.js"></script>
+
+  <div id="app"></div>
+  
+  <script>
+    // Import the component from the separate file
+    // In a real application, you would use a build system
+    // This is a simplified approach for demonstration
+    const { createApp } = Vue;
+    
+    // Load the component
+    fetch('MockEmailSystem.vue')
+      .then(response => response.text())
+      .then(template => {
+        // Extract the script part
+        const scriptMatch = template.match(/<script>([\s\S]*?)<\/script>/);
+        const scriptContent = scriptMatch ? scriptMatch[1] : '';
+        
+        // Extract the template part
+        const templateMatch = template.match(/<template>([\s\S]*?)<\/template>/);
+        const templateContent = templateMatch ? templateMatch[1] : '';
+        
+        // Create a component object
+        const componentObj = new Function(`return ${scriptContent.trim()}`)();
+        componentObj.template = templateContent;
+        
+        // Create and mount the app
+        const app = createApp(componentObj);
+        app.mount('#app');
+      })
+      .catch(error => {
+        console.error('Error loading component:', error);
+        document.getElementById('app').innerHTML = '<div class="p-4 text-red-500">Error loading component</div>';
+      });
+  </script>
+</body>
 </html>
+
