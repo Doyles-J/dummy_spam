@@ -51,12 +51,44 @@
       <div class="md:col-span-3 bg-white rounded-lg border shadow-sm">
         <div class="flex flex-col space-y-1.5 p-6 border-b">
           <h3 class="font-semibold text-lg">사원명단</h3>
+<!-- 부서 선택 및 전체 선택 컨트롤 추가 -->
+<div class="flex items-center justify-between mt-2">
+            <select 
+              v-model="selectedDepartment"
+              class="border rounded-md px-2 py-1 text-sm"
+            >
+              <option value="all">전체 부서</option>
+              <option 
+                v-for="dept in departmentList" 
+                :key="dept" 
+                :value="dept.replace('부서 ', '')"
+              >
+                {{ dept }}
+              </option>
+            </select>
+            
+            <div class="flex gap-2">
+              <button
+                @click="selectAllInDepartment"
+                class="text-sm px-2 py-1 border rounded-md hover:bg-gray-100"
+              >
+                전체 선택
+              </button>
+              <button
+                @click="unselectAll"
+                class="text-sm px-2 py-1 border rounded-md hover:bg-gray-100"
+              >
+                선택 해제
+              </button>
+            </div>
+          </div>
         </div>
+
         <div class="p-6">
           <div class="h-[400px] overflow-auto pr-4">
             <div class="space-y-2">
               <div
-                v-for="employee in employees"
+                v-for="employee in filteredEmployees"
                 :key="employee.id"
                 :class="[
                   'flex items-center space-x-2 p-2 rounded-md',
@@ -91,7 +123,9 @@
                 v-if="employees.length === 0"
                 class="text-center py-4 text-gray-500"
               >
-                모든 사원이 수신자 명단에 추가되었습니다.
+              {{ selectedDepartment === 'all' ? 
+                  '모든 사원이 수신자 명단에 추가되었습니다.' : 
+                  '선택한 부서에 사원이 없습니다.' }}
               </div>
             </div>
           </div>
@@ -199,131 +233,6 @@
   </div>
 </template>
 
-<!-- <script>
-import axiosInst from "@/axios";
-
-export default {
-  data() {
-    return {
-      employees: [],
-      recipients: [],
-      selectedEmployees: [],
-      selectedRecipients: [],
-      emailSubject: "제목입니다",
-      emailBody: "내용입니다",
-      showResults: false,
-      loading: false,
-    };
-  },
-  mounted() {
-    this.loadEmployees();
-  },
-  methods: {
-    // loadEmployees() {
-    //   axiosInst.get("/recipients").then(res => {
-    //     this.employees = res.data.map(emp => ({
-    //       id: emp.empId,
-    //       name: emp.empName,
-    //       email: empMail,
-    //       department: `부서 ${emp.deptId}`,
-    //       rank: emp.empRank
-    //     }))
-    //   }).catch(error => {
-    //     console.error("직원 데이터 로드 실패",error)
-    //   })
-    // },
-    // methods: {
-    loadEmployees() {
-      axiosInst
-        .get("/recipients")
-        .then((response) => {
-          // 받아온 데이터의 첫 번째 항목 구조 출력
-          console.log("첫 번째 데이터 구조:", response.data[0]);
-
-          this.employees = response.data.map((emp) => {
-            // 각 데이터 항목 출력
-            console.log("처리중인 데이터:", emp);
-
-            return {
-              id: emp.empId || emp.id,
-              name: emp.empName || emp.name,
-              email: emp.empMail || emp.email,
-              department: `부서 ${emp.deptId || emp.department}`,
-              rank: emp.empRank || emp.rank,
-            };
-          });
-        })
-        .catch((error) => {
-          console.error("직원 데이터 로드 실패:", error);
-        });
-    },
-  },
-
-  addRecipients() {
-    if (this.selectedEmployees.length === 0) return;
-
-    const newRecipients = this.employees.filter((emp) =>
-      this.selectedEmployees.includes(emp.id)
-    );
-    const remainingEmployees = this.employees.filter(
-      (emp) => !this.selectedEmployees.includes(emp.id)
-    );
-
-    this.recipients = [...this.recipients, ...newRecipients];
-    this.employees = remainingEmployees;
-    this.selectedEmployees = [];
-  },
-  removeRecipients() {
-    if (this.selectedRecipients.length === 0) return;
-
-    const removedRecipients = this.recipients.filter((rec) =>
-      this.selectedRecipients.includes(rec.id)
-    );
-    const remainingRecipients = this.recipients.filter(
-      (rec) => !this.selectedRecipients.includes(rec.id)
-    );
-
-    this.employees = [...this.employees, ...removedRecipients];
-    this.recipients = remainingRecipients;
-    this.selectedRecipients = [];
-  },
-  toggleEmployeeSelection(id) {
-    const index = this.selectedEmployees.indexOf(id);
-    if (index === -1) {
-      this.selectedEmployees.push(id);
-    } else {
-      this.selectedEmployees.splice(index, 1);
-    }
-  },
-  toggleRecipientSelection(id) {
-    const index = this.selectedRecipients.indexOf(id);
-    if (index === -1) {
-      this.selectedRecipients.push(id);
-    } else {
-      this.selectedRecipients.splice(index, 1);
-    }
-  },
-  handleSendEmail() {
-    if (this.recipients.length === 0) {
-      alert("수신자를 선택해주세요.");
-      return;
-    }
-
-    this.showResults = true;
-    // In a real application, you would send the email here
-  },
-  setShowResults(value) {
-    this.showResults = value;
-  },
-  resetSystem() {
-    this.employees = [...this.initialEmployees];
-    this.recipients = [];
-    this.selectedEmployees = [];
-    this.selectedRecipients = [];
-    this.showResults = false;
-  },
-};
-</script> -->
 
 <script>
 import axiosInst from "@/axios";
@@ -339,7 +248,25 @@ export default {
       emailBody: "내용입니다",
       showResults: false,
       loading: false,
+      selectedDepartment: "all",
+      departments: [],
     };
+  },
+  computed: {
+    // 부서별로 필터링된 직원 목록
+    filteredEmployees() {
+      if (this.selectedDepartment === 'all') {
+        return this.employees;
+      }
+      return this.employees.filter(emp => 
+        emp.department === `부서 ${this.selectedDepartment}`
+      );
+    },
+    // 부서 목록 생성
+    departmentList() {
+      const depts = new Set(this.employees.map(emp => emp.department));
+      return Array.from(depts).sort();
+    }
   },
   mounted() {
     this.loadEmployees();
@@ -437,6 +364,17 @@ export default {
       this.selectedRecipients = [];
       this.showResults = false;
     },
+    selectAllInDepartment() {
+      const employeesToSelect = this.filteredEmployees
+        .filter(emp => !this.recipients.some(r => r.id === emp.id))
+        .map(emp => emp.id);
+      this.selectedEmployees = employeesToSelect;
+    },
+
+    // 전체 선택 해제 메소드 추가
+    unselectAll() {
+      this.selectedEmployees = [];
+    }
   }
 };
 </script>

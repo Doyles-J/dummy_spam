@@ -13,7 +13,7 @@ public interface RecipientRepository extends CrudRepository<Recipient, Integer> 
     String query = """
         SELECT emp_id, emp_name, emp_mail, dept_id, emp_rank
         FROM employee
-        WHERE dept_id = 3
+        ORDER BY dept_id, emp_name
             """;
 @Query(value = query, nativeQuery = true)
     List<Recipient> findAllRec();
