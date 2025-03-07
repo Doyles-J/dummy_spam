@@ -1,0 +1,14 @@
+{
+    "configurations": [
+        {
+            "type": "java",
+            "name": "Spring Boot-MailApplication<mail>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.kt.mail.MailApplication",
+            "projectName": "mail",
+            "args": "",
+            "envFile": "${workspaceFolder}/.env"
+        }
+    ]
+}
