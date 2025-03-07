@@ -108,11 +108,21 @@ export default {
     },
     initChart() {
       const canvas = this.$refs.chartCanvas;
-      if (!canvas) return;
-      
-      this.chartContext = canvas.getContext('2d');
-      this.updateChart();
-    },
+    if (!canvas) return;
+    
+    // 디바이스 픽셀 비율 가져오기
+    const dpr = window.devicePixelRatio || 1;
+    
+    // 캔버스 실제 크기를 2배로 설정
+    canvas.width = canvas.offsetWidth * dpr;
+    canvas.height = canvas.offsetHeight * dpr;
+    
+    this.chartContext = canvas.getContext('2d');
+    // 컨텍스트 스케일 조정
+    this.chartContext.scale(dpr, dpr);
+    
+    this.updateChart();
+  },
     updateChart() {
       if (!this.chartContext || !this.selectedDrill) return;
       
