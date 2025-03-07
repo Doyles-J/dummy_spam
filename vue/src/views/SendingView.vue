@@ -51,22 +51,22 @@
       <div class="md:col-span-3 bg-white rounded-lg border shadow-sm">
         <div class="flex flex-col space-y-1.5 p-6 border-b">
           <h3 class="font-semibold text-lg">사원명단</h3>
-<!-- 부서 선택 및 전체 선택 컨트롤 추가 -->
-<div class="flex items-center justify-between mt-2">
-            <select 
+          <!-- 부서 선택 및 전체 선택 컨트롤 추가 -->
+          <div class="flex items-center justify-between mt-2">
+            <select
               v-model="selectedDepartment"
               class="border rounded-md px-2 py-1 text-sm"
             >
               <option value="all">전체 부서</option>
-              <option 
-                v-for="dept in departmentList" 
-                :key="dept" 
+              <option
+                v-for="dept in departmentList"
+                :key="dept"
                 :value="dept.replace('부서 ', '')"
               >
                 {{ dept }}
               </option>
             </select>
-            
+
             <div class="flex gap-2">
               <button
                 @click="selectAllInDepartment"
@@ -123,9 +123,11 @@
                 v-if="employees.length === 0"
                 class="text-center py-4 text-gray-500"
               >
-              {{ selectedDepartment === 'all' ? 
-                  '모든 사원이 수신자 명단에 추가되었습니다.' : 
-                  '선택한 부서에 사원이 없습니다.' }}
+                {{
+                  selectedDepartment === "all"
+                    ? "모든 사원이 수신자 명단에 추가되었습니다."
+                    : "선택한 부서에 사원이 없습니다."
+                }}
               </div>
             </div>
           </div>
@@ -233,7 +235,6 @@
   </div>
 </template>
 
-
 <script>
 import axiosInst from "@/axios";
 
@@ -255,18 +256,18 @@ export default {
   computed: {
     // 부서별로 필터링된 직원 목록
     filteredEmployees() {
-      if (this.selectedDepartment === 'all') {
+      if (this.selectedDepartment === "all") {
         return this.employees;
       }
-      return this.employees.filter(emp => 
-        emp.department === `부서 ${this.selectedDepartment}`
+      return this.employees.filter(
+        (emp) => emp.department === `부서 ${this.selectedDepartment}`
       );
     },
     // 부서 목록 생성
     departmentList() {
-      const depts = new Set(this.employees.map(emp => emp.department));
+      const depts = new Set(this.employees.map((emp) => emp.department));
       return Array.from(depts).sort();
-    }
+    },
   },
   mounted() {
     this.loadEmployees();
@@ -350,6 +351,25 @@ export default {
         alert("수신자를 선택해주세요.");
         return;
       }
+
+      // 각 수신자별로 개별화된 이메일 내용 생성
+      this.recipients.forEach((recipient) => {
+        const personalizedLink = `https://sites.google.com/view/alpbmailtest/?utm_source=${recipient.id}&utm_campaign=alpb&utm_medium=mail`;
+
+        const personalizedBody = `안녕하세요 ${recipient.name} ${recipient.rank}님,
+
+아래 링크를 클릭하여 확인해주세요:
+${personalizedLink}
+
+감사합니다.`;
+
+        // 여기에 실제 이메일 발송 로직 추가
+        console.log(
+          `수신자 ${recipient.name}에게 발송될 내용:`,
+          personalizedBody
+        );
+      });
+
       this.showResults = true;
     },
 
@@ -358,7 +378,7 @@ export default {
     },
 
     resetSystem() {
-      this.loadEmployees();  // initialEmployees 대신 데이터를 다시 로드
+      this.loadEmployees(); // initialEmployees 대신 데이터를 다시 로드
       this.recipients = [];
       this.selectedEmployees = [];
       this.selectedRecipients = [];
@@ -366,16 +386,16 @@ export default {
     },
     selectAllInDepartment() {
       const employeesToSelect = this.filteredEmployees
-        .filter(emp => !this.recipients.some(r => r.id === emp.id))
-        .map(emp => emp.id);
+        .filter((emp) => !this.recipients.some((r) => r.id === emp.id))
+        .map((emp) => emp.id);
       this.selectedEmployees = employeesToSelect;
     },
 
     // 전체 선택 해제 메소드 추가
     unselectAll() {
       this.selectedEmployees = [];
-    }
-  }
+    },
+  },
 };
 </script>
 
@@ -383,7 +403,7 @@ export default {
 /* 스크롤바 스타일링 (선택사항) */
 .overflow-y-auto {
   scrollbar-width: thin;
-  scrollbar-color: #CBD5E0 #EDF2F7;
+  scrollbar-color: #cbd5e0 #edf2f7;
 }
 
 .overflow-y-auto::-webkit-scrollbar {
@@ -391,11 +411,11 @@ export default {
 }
 
 .overflow-y-auto::-webkit-scrollbar-track {
-  background: #EDF2F7;
+  background: #edf2f7;
 }
 
 .overflow-y-auto::-webkit-scrollbar-thumb {
-  background-color: #CBD5E0;
+  background-color: #cbd5e0;
   border-radius: 3px;
 }
 </style>
