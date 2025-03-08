@@ -214,12 +214,12 @@
       <!-- Action Buttons -->
       <div class="md:col-span-7 flex justify-end gap-4 mt-4">
         <button
-          @click="setShowResults(true)"
+          @click="resetRecipients"
           :disabled="recipients.length === 0"
           class="border rounded-md py-2 px-4 hover:bg-gray-100 disabled:opacity-50"
           :class="{ 'cursor-not-allowed': recipients.length === 0 }"
         >
-          결과확인
+          초기화
         </button>
         <button
           @click="handleSendEmail"
@@ -394,6 +394,16 @@ ${personalizedLink}
     // 전체 선택 해제 메소드 추가
     unselectAll() {
       this.selectedEmployees = [];
+    },
+
+    resetRecipients() {
+      // 선택된 수신자들을 다시 employees 목록으로 되돌림
+      this.employees = [...this.employees, ...this.recipients];
+      // 수신자 목록 비우기
+      this.recipients = [];
+      // 선택 상태도 초기화
+      this.selectedEmployees = [];
+      this.selectedRecipients = [];
     },
   },
 };
