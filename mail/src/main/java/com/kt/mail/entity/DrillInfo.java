@@ -2,7 +2,6 @@ package com.kt.mail.entity;
 
 import java.util.Date;
 
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -14,10 +13,8 @@ import jakarta.persistence.Table;
 public class DrillInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "drill_id")
-    private Integer drillId;
+    private Integer id;
 
-    @Column(name = "drill_date")
     private Date drillDate;
     
     
