@@ -346,31 +346,30 @@ export default {
       }
     },
 
-    handleSendEmail() {
+    async handleSendEmail() {
       if (this.recipients.length === 0) {
         alert("수신자를 선택해주세요.");
         return;
       }
 
-      // 각 수신자별로 개별화된 이메일 내용 생성
-      this.recipients.forEach((recipient) => {
-        const personalizedLink = `https://sites.google.com/view/alpbmailtest/?utm_source=${recipient.id}&utm_campaign=alpb&utm_medium=mail`;
+      try {
+        const response = await axiosInst.post('/api/drill/send', {
+          recipients: this.recipients,
+          subject: this.emailSubject,
+          body: this.emailBody
+        });
 
-        const personalizedBody = `안녕하세요 ${recipient.name} ${recipient.rank}님,
-
-아래 링크를 클릭하여 확인해주세요:
-${personalizedLink}
-
-감사합니다.`;
-
-        // 여기에 실제 이메일 발송 로직 추가
-        console.log(
-          `수신자 ${recipient.name}에게 발송될 내용:`,
-          personalizedBody
-        );
-      });
-
-      this.showResults = true;
+        if (response.data.success) {
+          // drillId 저장
+          localStorage.setItem('lastDrillId', response.data.drillId);
+          this.showResults = true;
+        } else {
+          alert(response.data.message);
+        }
+      } catch (error) {
+        console.error('훈련 메일 발송 실패:', error);
+        alert('메일 발송 중 오류가 발생했습니다.');
+      }
     },
 
     setShowResults(value) {
