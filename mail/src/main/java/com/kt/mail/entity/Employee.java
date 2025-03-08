@@ -1,3 +1,5 @@
+package com.kt.mail.entity;
+
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
