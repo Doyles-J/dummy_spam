@@ -18,10 +18,16 @@ public class DepartmentRating {
     private Long id;
 
     @ManyToOne
-    @JoinColumn(name = "drill_id")
-    private DrillInfo drillId;
+    @JoinColumn(name = "dept_id")
+    private Department department;
 
-    private Integer deptId;
-    private Integer deptOpenRatio;
+    @ManyToOne
+    @JoinColumn(name = "drill_id")
+    private DrillInfo drillInfo;
+
+    @Column(name = "dept_rating")
     private String deptRating;
+
+    @Column(name = "dept_open_ratio")
+    private Integer deptOpenRatio;
 } 

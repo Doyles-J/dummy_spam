@@ -24,4 +24,24 @@ public class DrillMailContent {
     private String mailTitle;
     private String mailContent;
     private String mailLink;
+    public void setDrillInfo(DrillInfo drillInfo2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setDrillInfo'");
+    }
+    public void setEmpId(Integer empId2) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setEmpId'");
+    }
+    public void setSubject(String subject) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setSubject'");
+    }
+    public void setContent(String body) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setContent'");
+    }
+    public void setTrackingLink(String trackingLink) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setTrackingLink'");
+    }
 } 

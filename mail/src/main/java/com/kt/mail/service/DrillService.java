@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.kt.mail.controller.EmailService;
 import com.kt.mail.domain.DrillInfoRepository;
 import com.kt.mail.domain.DrillMailContentRepository;
 import com.kt.mail.entity.DrillInfo;

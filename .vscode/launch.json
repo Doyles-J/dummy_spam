@@ -8,6 +8,17 @@
             "mainClass": "com.kt.mail.MailApplication",
             "projectName": "mail",
             "args": "",
+            "envFile": "${workspaceFolder}/.env",
+            "vmArgs": " -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.port=8683 -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Dspring.jmx.enabled=true -Djava.rmi.server.hostname=localhost -Dspring.application.admin.enabled=true -Dspring.boot.project.name=mail"
+        },
+        {
+            "type": "java",
+            "name": "Spring Boot-EmpApplication<emp>",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "mainClass": "com.kt.emp.EmpApplication",
+            "projectName": "emp",
+            "args": "",
             "envFile": "${workspaceFolder}/.env"
         }
     ]

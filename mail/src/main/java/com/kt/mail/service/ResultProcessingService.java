@@ -6,6 +6,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.kt.mail.domain.DepartmentRatingRepository;
 import com.kt.mail.domain.DrillResultRepository;
+import com.kt.mail.entity.DepartmentRating;
 import com.kt.mail.entity.DrillResult;
 
 import java.util.List;
@@ -32,5 +33,9 @@ public class ResultProcessingService {
         // 2. 부서별로 그룹화
         // 3. 비율 계산
         // 4. DepartmentRating 저장
+    }
+
+    public List<DepartmentRating> getRatingsByDrillId(Integer drillId) {
+        return ratingRepository.findByDrillInfo_DrillId(drillId);
     }
 } 

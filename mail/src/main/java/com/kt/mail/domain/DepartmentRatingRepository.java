@@ -8,6 +8,6 @@ import com.kt.mail.entity.DepartmentRating;
 import java.util.List;
 
 @Repository
-public interface DepartmentRatingRepository extends JpaRepository<DepartmentRating, Integer> {
-    List<DepartmentRating> findByDrillInfoId(Integer drillId);
+public interface DepartmentRatingRepository extends JpaRepository<DepartmentRating, Long> {
+    List<DepartmentRating> findByDrillInfo_DrillId(Integer drillId);
 } 
