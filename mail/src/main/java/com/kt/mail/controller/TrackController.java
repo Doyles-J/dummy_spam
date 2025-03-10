@@ -28,8 +28,6 @@ public class TrackController {
             @PathVariable("drillId") Integer drillId,
             @PathVariable("empIdHash") String empIdHash,
             HttpServletRequest request) {
-
-                System.out.println("==============ㄹㄹㄹㄹㄹㄹ===============>");
         
         try {
             log.info("훈련 링크 클릭 감지: drillId={}, empIdHash={}", drillId, empIdHash);
@@ -54,7 +52,7 @@ public class TrackController {
             
             // 클릭 후 리다이렉트할 페이지로 이동
             return ResponseEntity.status(HttpStatus.FOUND)
-                .location(URI.create("/training-result"))
+                .location(URI.create("/result.html"))
                 .build();
                 
         } catch (Exception e) {
