@@ -11,9 +11,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.persistence.Column;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "drill_info")
+@Getter
+@Setter
 public class DrillInfo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,13 +33,11 @@ public class DrillInfo {
     private List<DepartmentRating> departmentRatings;
 
     public void setDrillDate(LocalDateTime now) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setDrillDate'");
+        this.drillDate = now;
     }
 
     public Long getId() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getId'");
+        return Long.valueOf(this.id);
     }
     
     

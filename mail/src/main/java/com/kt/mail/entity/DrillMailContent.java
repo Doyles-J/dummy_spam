@@ -8,9 +8,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "drill_mail_content")
+@Getter
+@Setter
 public class DrillMailContent {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -24,24 +28,24 @@ public class DrillMailContent {
     private String mailTitle;
     private String mailContent;
     private String mailLink;
-    public void setDrillInfo(DrillInfo drillInfo2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setDrillInfo'");
+
+    public void setDrillInfo(DrillInfo drillInfo) {
+        this.drillInfo = drillInfo;
     }
-    public void setEmpId(Integer empId2) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setEmpId'");
+
+    public void setEmpId(Integer empId) {
+        this.empId = empId;
     }
+
     public void setSubject(String subject) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setSubject'");
+        this.mailTitle = subject;
     }
+
     public void setContent(String body) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setContent'");
+        this.mailContent = body;
     }
+
     public void setTrackingLink(String trackingLink) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'setTrackingLink'");
+        this.mailLink = trackingLink;
     }
 } 
