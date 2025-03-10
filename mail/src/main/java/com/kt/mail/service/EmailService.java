@@ -17,7 +17,6 @@ import com.kt.mail.domain.DrillMailContentRepository;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -32,23 +31,6 @@ public class EmailService {
 
     @Value("${server.port:8080}")        // Spring의 @Value 사용
     private String serverPort;
-
-    public void sendSimpleMailMessage() {
-        SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
-        try {
-            // 메일을 받을 수신자 설정
-            simpleMailMessage.setTo("keev005@naver.com");
-            // 메일의 제목 설정
-            simpleMailMessage.setSubject("테스트 메일 제목");
-            // 메일의 내용 설정
-            simpleMailMessage.setText("테스트 메일 내용");
-            javaMailSender.send(simpleMailMessage);
-            log.info("메일 발송 성공!");
-        } catch (Exception e) {
-            log.info("메일 발송 실패!");
-            throw new RuntimeException(e);
-        }
-    }
 
     public void sendEmails(List<Object> recipients, String subject, String body, Integer drillId) {
         try {

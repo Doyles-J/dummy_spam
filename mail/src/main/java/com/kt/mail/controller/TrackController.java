@@ -25,9 +25,11 @@ public class TrackController {
     
     @GetMapping("/{drillId}/{empIdHash}")
     public ResponseEntity<String> trackEmailClick(
-            @PathVariable Integer drillId,
-            @PathVariable String empIdHash,
+            @PathVariable("drillId") Integer drillId,
+            @PathVariable("empIdHash") String empIdHash,
             HttpServletRequest request) {
+
+                System.out.println("==============ㄹㄹㄹㄹㄹㄹ===============>");
         
         try {
             log.info("훈련 링크 클릭 감지: drillId={}, empIdHash={}", drillId, empIdHash);
