@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -16,6 +17,7 @@ import com.kt.mail.domain.DrillMailContentRepository;
 
 import jakarta.mail.internet.MimeMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -24,6 +26,12 @@ import lombok.extern.slf4j.Slf4j;
 public class EmailService {
     private final JavaMailSender javaMailSender;
     private final DrillMailContentRepository drillMailContentRepository;
+
+    @Value("${server.domain:localhost}")  // Spring의 @Value 사용
+    private String serverDomain;
+
+    @Value("${server.port:8080}")        // Spring의 @Value 사용
+    private String serverPort;
 
     public void sendSimpleMailMessage() {
         SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
@@ -88,10 +96,10 @@ public class EmailService {
 
                     log.info("이메일 발송 시도: {}, 사원ID: {}", email, empId);
                     
-                    // 추적 링크 생성
+                    // 추적 링크 생성 (실제 서버 도메인 사용)
                     String empIdHash = String.valueOf(empId.hashCode());
-                    String trackingLink = String.format("http://localhost:8080/track/%d/%s", 
-                        drillId, empIdHash);
+                    String trackingLink = String.format("http://%s:%s/track/%d/%s", 
+                        serverDomain, serverPort, drillId, empIdHash);
                     
                     log.info("생성된 추적 링크: {}", trackingLink);
                     
