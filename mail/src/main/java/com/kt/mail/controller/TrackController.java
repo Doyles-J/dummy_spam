@@ -10,14 +10,12 @@ import com.kt.mail.service.DrillService;
 import com.kt.mail.service.DrillResultService;
 
 import java.net.URI;
-import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/track")

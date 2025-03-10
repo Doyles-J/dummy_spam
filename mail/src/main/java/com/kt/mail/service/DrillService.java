@@ -26,8 +26,6 @@ public class DrillService {
     @Autowired
     private DrillMailContentRepository mailContentRepository;
     @Autowired
-    private EmailService emailService;
-    @Autowired
     private DepartmentRatingRepository departmentRatingRepository;
     @Autowired
     private RecipientRepository recipientRepository;  // EmployeeRepository 대신 RecipientRepository 사용
@@ -120,10 +118,9 @@ public class DrillService {
                 
                 // 등급 계산
                 String deptRating;
-                if (openRatio >= 80) deptRating = "A";
-                else if (openRatio >= 60) deptRating = "B";
-                else if (openRatio >= 40) deptRating = "C";
-                else deptRating = "D";
+                if (openRatio <= 5) deptRating = "Green";
+                else if (openRatio <= 20) deptRating = "Yellow";
+                else deptRating = "Red";
                 
                 rating.setDeptRating(deptRating);
                 
