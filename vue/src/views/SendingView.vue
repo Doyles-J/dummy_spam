@@ -14,7 +14,7 @@
             <h3 class="font-medium mb-2">발송 완료</h3>
             <p>
               총 {{ recipients.length }}명의 사용자에게 모의 악성메일이
-              발송되었습니다.
+              발송되었습니다!
             </p>
           </div>
 
