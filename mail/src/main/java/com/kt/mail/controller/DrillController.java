@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/drill")
+@RequestMapping("/drill")
 public class DrillController {
     @Autowired
     private DrillService drillService;

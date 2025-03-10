@@ -25,6 +25,9 @@ public class DrillService {
 
     public DrillInfo createNewDrill() {
         DrillInfo drillInfo = new DrillInfo();
+        if (drillInfo.getDrillId() == null) {
+            drillInfo.setDrillId((int) (System.currentTimeMillis() % 100000));
+        }
         drillInfo.setDrillDate(LocalDateTime.now());
         return drillInfoRepository.save(drillInfo);
     }
@@ -33,16 +36,16 @@ public class DrillService {
                                    String subject, String body) {
         for (Recipient recipient : recipients) {
             DrillMailContent content = new DrillMailContent();
-            content.setDrillInfo(drillInfo);
+            content.setDrillId(drillInfo.getDrillId());  // drillId 설정
             content.setEmpId(recipient.getEmpId());
-            content.setSubject(subject);
-            content.setContent(body);
-            content.setTrackingLink(generateTrackingLink(drillInfo.getId(), recipient.getEmpId()));
+            content.setMailTitle(subject);
+            content.setMailContent(body);
+
+            String trackingLink = String.format("http://localhost:8080/track/%d/%d", 
+                drillInfo.getDrillId(), recipient.getEmpId());
+            content.setMailLink(trackingLink);
+            
             mailContentRepository.save(content);
         }
-    }
-
-    private String generateTrackingLink(Long drillId, Integer empId) {
-        return String.format("https://sites.google.com/view/alpbmailtest/홈/"+empId);
     }
 } 

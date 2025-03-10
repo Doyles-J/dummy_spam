@@ -48,4 +48,13 @@ public class DrillMailContent {
     public void setTrackingLink(String trackingLink) {
         this.mailLink = trackingLink;
     }
+
+    public void setDrillId(Integer drillId) {
+        if (this.drillInfo == null) {
+            this.drillInfo = new DrillInfo();
+            this.drillInfo.setDrillId(drillId);
+        } else {
+            this.drillInfo.setDrillId(drillId);
+        }
+    }
 } 

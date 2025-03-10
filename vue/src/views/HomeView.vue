@@ -7,31 +7,7 @@ const router = useRouter();
 const employees = ref(null);
 
 // 목록 데이터 사전 준비
-onBeforeMount(()=>{
-  getData();
-});
 
-// 백앤드에서 데이터 가져오기
-const getData = () => {
-  // backend server: http://localhost:8080/emp
-  // proxy server: http://localhost:5137/api/emp
-  axiosInst.get("/emp").then((res)=>{
-      // console.log(res.data);
-      employees.value = res.data;
-  });
-}
-
-// 수정 화면 전환
-const goModiry= (id) => {
-  router.push("/modify?id="+id);
-}
-
-// 백앤드에 삭제 요청
-const deleteEmployee = (id) => {
-  axiosInst.delete("/emp/"+id).then((res)=>{
-    if (res.status === 200) getData();
-  });
-}
 </script>
 
 <template>

@@ -353,7 +353,7 @@ export default {
       }
 
       try {
-        const response = await axiosInst.post('/api/drill/send', {
+        const response = await axiosInst.post('/drill/send', {
           recipients: this.recipients,
           subject: this.emailSubject,
           body: this.emailBody

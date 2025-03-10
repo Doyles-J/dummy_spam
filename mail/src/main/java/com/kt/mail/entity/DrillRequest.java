@@ -12,17 +12,14 @@ public class DrillRequest {
     private String body;
 
     public List<Recipient> getRecipients() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getRecipients'");
+        return recipients;
     }
 
     public String getSubject() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getSubject'");
+        return subject;
     }
 
     public String getBody() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getBody'");
+        return body;
     }
 }
