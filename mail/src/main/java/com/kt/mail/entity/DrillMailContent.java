@@ -24,7 +24,7 @@ public class DrillMailContent {
     @JoinColumn(name = "drill_id")
     private DrillInfo drillInfo;
     
-    @Column(name = "emp_id", nullable = false)
+    @Column(name = "emp_id")
     private Integer empId;
     
     @Column(name = "mail_title")
@@ -62,10 +62,8 @@ public class DrillMailContent {
     public void setDrillId(Integer drillId) {
         if (this.drillInfo == null) {
             this.drillInfo = new DrillInfo();
-            this.drillInfo.setDrillId(drillId);
-        } else {
-            this.drillInfo.setDrillId(drillId);
         }
+        this.drillInfo.setDrillId(drillId);
     }
 
     public void generateTrackingLink(Integer drillId) {

@@ -1,4 +1,3 @@
-
 <!-- <script setup>
 import { onBeforeMount, ref } from 'vue';
 import {useRoute, useRouter} from 'vue-router';
@@ -36,153 +35,70 @@ const onModifyHandler = () => {
 }
 </script> -->
 <script>
+import axiosInst from '@/axios';
 
 export default {
   data() {
     return {
       drills: [],
       selectedDrillId: null,
-      chartContext: null,
-      chart: null,
-      colors: [
-        '#4C51BF', '#ED8936', '#48BB78', '#38B2AC', 
-        '#4299E1', '#667EEA', '#9F7AEA', '#ED64A6'
-      ]
+      departmentStats: [],
+      loading: false,
+      error: null
     }
   },
-  computed: {
-    selectedDrill() {
-      if (!this.selectedDrillId) return null;
-      return this.drills.find(drill => drill.id === this.selectedDrillId);
-    }
+  
+  async mounted() {
+    await this.loadDrills();
   },
-  mounted() {
-    this.loadDrills();
-    if (this.drills.length > 0) {
-      this.selectedDrillId = this.drills[0].id;
-      this.$nextTick(() => {
-        this.initChart();
-      });
-    }
-  },
+  
   methods: {
-    loadDrills() {
-      // In a real app, this would be an API call
-      const savedDrills = JSON.parse(localStorage.getItem('mockEmailDrills') || '[]');
-      this.drills = savedDrills;
-      
-      // If no drills exist, create a sample one
-      if (this.drills.length === 0) {
-        this.createSampleDrill();
+    async loadDrills() {
+      try {
+        const response = await axiosInst.get('/drill/list');
+        this.drills = response.data;
+        if (this.drills.length > 0) {
+          this.selectedDrillId = this.drills[0].drillId;
+          await this.loadDrillStats();
+        }
+      } catch (error) {
+        console.error('훈련 목록 로드 실패:', error);
+        this.error = '훈련 목록을 불러오는데 실패했습니다.';
       }
     },
-    createSampleDrill() {
-      const departments = ['개발팀', '마케팅팀', '인사팀', '영업팀'];
-      const departmentStats = departments.map(dept => {
-        const total = Math.floor(Math.random() * 20) + 5;
-        const clicked = Math.floor(Math.random() * total);
-        return {
-          department: dept,
-          total,
-          clicked,
-          ratio: clicked / total
-        };
-      });
-      
-      const sampleDrill = {
-        id: new Date().getTime(),
-        date: new Date().toISOString(),
-        recipients: [],
-        departmentStats
-      };
-      
-      this.drills = [sampleDrill];
-      this.selectedDrillId = sampleDrill.id;
-      
-      // Save to localStorage
-      localStorage.setItem('mockEmailDrills', JSON.stringify(this.drills));
-    },
-    formatDate(dateString) {
-      const date = new Date(dateString);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-    },
-    initChart() {
-      const canvas = this.$refs.chartCanvas;
-    if (!canvas) return;
     
-    // 디바이스 픽셀 비율 가져오기
-    const dpr = window.devicePixelRatio || 1;
-    
-    // 캔버스 실제 크기를 2배로 설정
-    canvas.width = canvas.offsetWidth * dpr;
-    canvas.height = canvas.offsetHeight * dpr;
-    
-    this.chartContext = canvas.getContext('2d');
-    // 컨텍스트 스케일 조정
-    this.chartContext.scale(dpr, dpr);
-    
-    this.updateChart();
-  },
-    updateChart() {
-      if (!this.chartContext || !this.selectedDrill) return;
+    async loadDrillStats() {
+      if (!this.selectedDrillId) return;
       
-      const ctx = this.chartContext;
-      const stats = this.selectedDrill.departmentStats;
-      const width = ctx.canvas.width;
-      const height = ctx.canvas.height;
-      
-      // Clear canvas
-      ctx.clearRect(0, 0, width, height);
-      
-      // Draw chart
-      const barWidth = (width - 100) / stats.length;
-      const maxRatio = Math.max(...stats.map(s => s.ratio));
-      const scale = (height - 60) / (maxRatio || 1);
-      
-      // Draw axes
-      ctx.beginPath();
-      ctx.moveTo(50, 20);
-      ctx.lineTo(50, height - 30);
-      ctx.lineTo(width - 20, height - 30);
-      ctx.strokeStyle = '#CBD5E0';
-      ctx.stroke();
-      
-      // Draw bars
-      stats.forEach((stat, index) => {
-        const x = 50 + (index * barWidth) + 10;
-        const barHeight = stat.ratio * scale;
-        const y = height - 30 - barHeight;
+      try {
+        this.loading = true;
+        const response = await axiosInst.get(`/drill/${this.selectedDrillId}/stats`);
+        this.departmentStats = response.data.map(stat => ({
+          department: `부서 ${stat.deptId}`,
+          total: stat.totalEmployees || 0,
+          clicked: stat.openCount || 0,
+          ratio: stat.deptOpenRatio / 100,
+          rating: stat.deptRating
+        }));
         
-        // Draw bar
-        ctx.fillStyle = this.colors[index % this.colors.length];
-        ctx.fillRect(x, y, barWidth - 20, barHeight);
-        
-        // Draw percentage
-        ctx.fillStyle = '#2D3748';
-        ctx.font = '12px Arial';
-        ctx.textAlign = 'center';
-        ctx.fillText(`${(stat.ratio * 100).toFixed(1)}%`, x + (barWidth - 20) / 2, y - 5);
-        
-        // Draw department name
-        ctx.fillText(stat.department, x + (barWidth - 20) / 2, height - 10);
-      });
-      
-      // Draw y-axis labels
-      ctx.fillStyle = '#718096';
-      ctx.textAlign = 'right';
-      ctx.fillText('0%', 45, height - 30);
-      ctx.fillText('50%', 45, height - 30 - (0.5 * scale));
-      ctx.fillText('100%', 45, height - 30 - (1 * scale));
+        this.$nextTick(() => {
+          this.updateChart();
+        });
+      } catch (error) {
+        console.error('통계 데이터 로드 실패:', error);
+        this.error = '통계 데이터를 불러오는데 실패했습니다.';
+      } finally {
+        this.loading = false;
+      }
     }
   },
+  
   watch: {
-    selectedDrillId() {
-      this.$nextTick(() => {
-        this.updateChart();
-      });
+    async selectedDrillId() {
+      await this.loadDrillStats();
     }
   }
-};
+}
 </script>
 
 <template>

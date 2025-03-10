@@ -6,14 +6,18 @@ import org.springframework.web.bind.annotation.*;
 
 import com.kt.mail.domain.DrillResultRepository;
 import com.kt.mail.entity.DrillResult;
+import com.kt.mail.service.DrillService;
+import com.kt.mail.service.DrillResultService;
 
 import java.net.URI;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 
 @RestController
 @RequestMapping("/track")
@@ -22,6 +26,8 @@ import lombok.extern.slf4j.Slf4j;
 public class TrackController {
     
     private final DrillResultRepository drillResultRepository;
+    private final DrillService drillService;
+    private final DrillResultService drillResultService;
     
     @GetMapping("/{drillId}/{empIdHash}")
     public ResponseEntity<String> trackEmailClick(
@@ -49,6 +55,15 @@ public class TrackController {
             
             log.info("훈련 클릭 기록 완료: drillId={}, empIdHash={}, ip={}", 
                 drillId, empIdHash, ipAddress);
+            
+            // 부서별 통계 업데이트
+            try {
+                log.info("부서별 통계 업데이트 시작: drillId={}", drillId);
+                drillService.updateDepartmentRatings(drillId);
+                log.info("부서별 통계 업데이트 완료: drillId={}", drillId);
+            } catch (Exception e) {
+                log.error("부서별 통계 업데이트 실패: drillId={}", drillId, e);
+            }
             
             // 클릭 후 리다이렉트할 페이지로 이동
             return ResponseEntity.status(HttpStatus.FOUND)

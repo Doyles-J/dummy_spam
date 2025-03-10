@@ -1,5 +1,6 @@
 package com.kt.mail.entity;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -67,5 +68,10 @@ public class DrillResult {
 
     public void setIpAddress(String ipAddress) {
         this.ipAddress = ipAddress;
+    }
+
+    public void setClickTime(Timestamp clickTime) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'setClickTime'");
     }
 } 

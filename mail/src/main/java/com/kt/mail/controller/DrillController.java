@@ -5,6 +5,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import com.kt.mail.entity.DepartmentRating;
 import com.kt.mail.entity.DrillInfo;
 import com.kt.mail.entity.DrillRequest;
 import com.kt.mail.entity.DrillResult;
@@ -80,5 +81,33 @@ public class DrillController {
         // 2. DrillResult 객체로 변환
         // 3. 반환
         return new ArrayList<>(); // 임시 반환
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<DrillInfo>> getDrillList() {
+        try {
+            List<DrillInfo> drills = drillService.getAllDrills();
+            return ResponseEntity.ok(drills);
+        } catch (Exception e) {
+            log.error("훈련 목록 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/{drillId}/stats")
+    public ResponseEntity<List<DepartmentRating>> getDrillStats(@PathVariable Integer drillId) {
+        try {
+            List<DepartmentRating> stats = drillService.getDrillStats(drillId);
+            return ResponseEntity.ok(stats);
+        } catch (Exception e) {
+            log.error("훈련 통계 조회 실패: {}", e.getMessage(), e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/api/drills/{drillId}")
+    public ResponseEntity<?> getDrill(@PathVariable("drillId") Integer drillId) {
+        // ... 메서드 내용 ...
+        return null; // Placeholder return, actual implementation needed
     }
 } 

@@ -6,7 +6,6 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import com.kt.mail.entity.Employee;
-import com.kt.mail.entity.DepartmentRating;
 
 @Entity
 @Table(name = "department")
@@ -24,11 +23,6 @@ public class Department {
     @JoinColumn(name = "manager_id")
     private Employee manager;
 
-    // Employee와의 양방향 관계 (필요한 경우)
-    @OneToMany(mappedBy = "department", targetEntity = Employee.class)
+    @OneToMany(mappedBy = "department")
     private List<Employee> employees;
-
-    // DepartmentRating과의 양방향 관계 (필요한 경우)
-    @OneToMany(mappedBy = "department", targetEntity = DepartmentRating.class)
-    private List<DepartmentRating> departmentRatings;
 }
