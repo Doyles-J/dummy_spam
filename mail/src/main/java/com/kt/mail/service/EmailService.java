@@ -1,6 +1,7 @@
 package com.kt.mail.service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.springframework.mail.SimpleMailMessage;
@@ -72,36 +73,69 @@ public class EmailService {
         }
     }
 
-    public void sendEmails(List<Recipient> recipients, String subject, String body, Integer drillId) {
+    public void sendEmails(List<Object> recipients, String subject, String body, Integer drillId) {
         try {
-            // 직접 테스트 메일 발송 (recipients와 무관하게 실행)
-            SimpleMailMessage message = new SimpleMailMessage();
-            message.setTo("keev005@naver.com");  // 실제 존재하는 이메일 주소
-            message.setSubject(subject != null ? subject : "테스트 제목");
-            message.setText(body != null ? body : "테스트 내용");
+            // 디버그: 수신자 목록과 타입 출력
+            log.info("수신자 목록 타입: {}", recipients.getClass());
+            log.info("첫 번째 수신자 타입: {}", recipients.isEmpty() ? "없음" : recipients.get(0).getClass());
+            log.info("수신자 목록 내용: {}", recipients);
             
-            javaMailSender.send(message);
-            log.info("메일 발송 성공: 수신자 1명");
-            
-            /* 수신자 목록 처리는 나중에
             // 수신자 목록이 null이거나 비어 있는지 확인
             if (recipients == null || recipients.isEmpty()) {
                 log.warn("수신자 목록이 비어 있습니다");
                 return;
             }
             
-            // null이 아닌 유효한 이메일 주소만 필터링
-            List<String> validEmails = recipients.stream()
-                .map(Recipient::getEmpMail)
-                .filter(email -> email != null && !email.isEmpty())
-                .collect(Collectors.toList());
-            
-            // 유효한 이메일이 없으면 처리 중단
-            if (validEmails.isEmpty()) {
-                log.warn("유효한 이메일 주소가 없습니다");
-                return;
+            // 각 수신자에게 메일 발송
+            for (Object recipientObj : recipients) {
+                String email = null;
+                
+                // JSON에서 변환된 LinkedHashMap으로 처리
+                if (recipientObj instanceof Map) {
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> recipientMap = (Map<String, Object>) recipientObj;
+                    log.info("수신자 맵: {}", recipientMap);
+                    
+                    // 가능한 모든 이메일 필드명 시도
+                    email = (String) recipientMap.get("email");
+                    if (email == null) email = (String) recipientMap.get("empMail");
+                    if (email == null) email = (String) recipientMap.get("emp_mail");
+                    
+                    log.info("추출된 이메일: {}", email);
+                } 
+                // Recipient 엔티티로 처리
+                else if (recipientObj instanceof Recipient) {
+                    Recipient recipient = (Recipient) recipientObj;
+                    email = recipient.getEmpMail();
+                    log.info("Recipient에서 추출된 이메일: {}", email);
+                    
+                    // 변환된 필드 값 모두 출력 (디버깅용)
+                    log.info("Recipient 상세 정보: empId={}, empName={}, empMail={}", 
+                        recipient.getEmpId(), recipient.getEmpName(), recipient.getEmpMail());
+                }
+                
+                if (email != null && !email.isEmpty()) {
+                    log.info("이메일 발송 시도: {}", email);
+                    
+                    SimpleMailMessage message = new SimpleMailMessage();
+                    message.setTo(email);
+                    message.setSubject(subject != null ? subject : "테스트 제목");
+                    
+                    // 추적 링크 추가
+                    String trackingLink = String.format("https://localhost:8080/track/%d/%s", 
+                        drillId, email.hashCode());
+                    String fullBody = (body != null ? body : "테스트 내용") + 
+                        "\n\n추적 링크: " + trackingLink;
+                    
+                    message.setText(fullBody);
+                    javaMailSender.send(message);
+                    log.info("메일 발송 성공: {}", email);
+                } else {
+                    log.warn("유효하지 않은 이메일 주소: {}", recipientObj);
+                }
             }
-            */
+            
+            log.info("모든 메일 발송 완료");
         } catch (Exception e) {
             log.error("메일 발송 실패: {}", e.getMessage(), e);
             throw new RuntimeException("메일 발송 중 오류 발생", e);

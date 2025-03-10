@@ -16,9 +16,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 @RestController
 @RequestMapping("/drill")
 public class DrillController {
+    private static final Logger log = LoggerFactory.getLogger(DrillController.class);
+
     @Autowired
     private DrillService drillService;
     @Autowired
@@ -27,32 +32,28 @@ public class DrillController {
     private ResultProcessingService resultService;
 
     @PostMapping("/send")
-    public ResponseEntity<?> startNewDrill(@RequestBody DrillRequest request) {
+    public ResponseEntity<?> startNewDrill(@RequestBody Map<String, Object> request) {
         try {
-            // 1. 새 훈련 정보 생성
+            @SuppressWarnings("unchecked")
+            List<Object> recipients = (List<Object>) request.get("recipients");
+            String subject = (String) request.get("subject");
+            String body = (String) request.get("body");
+            
+            // 로깅 추가
+            log.info("수신자 목록: {}", recipients);
+            log.info("제목: {}", subject);
+            log.info("내용: {}", body);
+            
+            // 메일 발송 로직
             DrillInfo drillInfo = drillService.createNewDrill();
+            emailService.sendEmails(recipients, subject, body, drillInfo.getDrillId());
             
-            // 2. 메일 컨텐츠 저장
-            drillService.saveDrillMailContent(
-                drillInfo, 
-                request.getRecipients(), 
-                request.getSubject(), 
-                request.getBody()
-            );
-            
-            // 3. 이메일 발송
-            emailService.sendEmails(
-                request.getRecipients(),
-                request.getSubject(),
-                request.getBody(),
-                drillInfo.getId()
-            );
-
             return ResponseEntity.ok(Map.of(
                 "success", true,
-                "drillId", drillInfo.getId()
+                "drillId", drillInfo.getDrillId()
             ));
         } catch (Exception e) {
+            log.error("메일 발송 오류: {}", e.getMessage(), e);
             return ResponseEntity.badRequest().body(Map.of(
                 "success", false,
                 "message", e.getMessage()

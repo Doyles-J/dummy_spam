@@ -353,14 +353,14 @@ export default {
       }
 
       try {
+        // 타임아웃 증가 (15초)
         const response = await axiosInst.post('/drill/send', {
           recipients: this.recipients,
           subject: this.emailSubject,
           body: this.emailBody
-        });
+        }, { timeout: 15000 }); // 15초로 타임아웃 증가
 
         if (response.data.success) {
-          // drillId 저장
           localStorage.setItem('lastDrillId', response.data.drillId);
           this.showResults = true;
         } else {
@@ -368,7 +368,8 @@ export default {
         }
       } catch (error) {
         console.error('훈련 메일 발송 실패:', error);
-        alert('메일 발송 중 오류가 발생했습니다.');
+        alert('메일 발송 중 오류가 발생했습니다. ' + 
+              (error.code === 'ECONNABORTED' ? '요청 시간이 초과되었습니다.' : error.message));
       }
     },
 
