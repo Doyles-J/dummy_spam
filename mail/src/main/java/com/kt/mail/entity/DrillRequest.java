@@ -1,8 +1,6 @@
-package com.kt.mail.controller;
+package com.kt.mail.entity;
 
 import java.util.List;
-
-import com.kt.mail.entity.Recipient;
 
 public class DrillRequest {
 

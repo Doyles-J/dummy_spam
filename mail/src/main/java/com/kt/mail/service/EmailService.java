@@ -1,4 +1,4 @@
-package com.kt.mail.controller;
+package com.kt.mail.service;
 
 import java.util.List;
 

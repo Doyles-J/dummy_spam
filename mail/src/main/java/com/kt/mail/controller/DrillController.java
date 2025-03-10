@@ -6,8 +6,10 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import com.kt.mail.entity.DrillInfo;
+import com.kt.mail.entity.DrillRequest;
 import com.kt.mail.entity.DrillResult;
 import com.kt.mail.service.DrillService;
+import com.kt.mail.service.EmailService;
 import com.kt.mail.service.ResultProcessingService;
 
 import java.util.ArrayList;
