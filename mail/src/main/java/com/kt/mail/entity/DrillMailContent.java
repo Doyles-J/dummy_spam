@@ -24,16 +24,26 @@ public class DrillMailContent {
     @JoinColumn(name = "drill_id")
     private DrillInfo drillInfo;
     
+    @Column(name = "emp_id", nullable = false)
     private Integer empId;
+    
+    @Column(name = "mail_title")
     private String mailTitle;
+    
+    @Column(name = "mail_content")
     private String mailContent;
+    
+    @Column(name = "mail_link")
     private String mailLink;
 
     public void setDrillInfo(DrillInfo drillInfo) {
         this.drillInfo = drillInfo;
     }
 
-    public void setEmpId(Integer empId) {
+    public void setEmployeeId(Integer empId) {
+        if (empId == null) {
+            throw new IllegalArgumentException("사원 ID는 null일 수 없습니다.");
+        }
         this.empId = empId;
     }
 
@@ -56,5 +66,13 @@ public class DrillMailContent {
         } else {
             this.drillInfo.setDrillId(drillId);
         }
+    }
+
+    public void generateTrackingLink(Integer drillId) {
+        if (this.empId == null) {
+            throw new IllegalArgumentException("추적 링크 생성을 위해서는 사원 ID가 필요합니다.");
+        }
+        this.mailLink = String.format("http://localhost:8080/track/%d/%s", 
+            drillId, this.empId.hashCode());
     }
 } 

@@ -245,7 +245,7 @@ export default {
       recipients: [],
       selectedEmployees: [],
       selectedRecipients: [],
-      emailSubject: "[테스트]접속 테스트용 이메일입니다",
+      emailSubject: "[ALP-B]접속 테스트용 이메일입니다",
       emailBody: "아래 링크에 접속해주세요",
       showResults: false,
       loading: false,
