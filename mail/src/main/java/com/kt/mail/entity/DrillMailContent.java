@@ -73,4 +73,19 @@ public class DrillMailContent {
         this.mailLink = String.format("http://localhost:8080/track/%d/%s", 
             drillId, this.empId.hashCode());
     }
+
+    public Integer getDeptId() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDeptId'");
+    }
+
+    public Object getDepartment() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getDepartment'");
+    }
+
+    public Object getClickTime() {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'getClickTime'");
+    }
 } 

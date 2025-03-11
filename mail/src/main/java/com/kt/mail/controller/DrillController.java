@@ -14,8 +14,10 @@ import com.kt.mail.service.EmailService;
 import com.kt.mail.service.ResultProcessingService;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -84,25 +86,28 @@ public class DrillController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<DrillInfo>> getDrillList() {
+    public ResponseEntity<?> getDrillList() {
         try {
+            log.info("훈련 목록 조회 요청 받음");
             List<DrillInfo> drills = drillService.getAllDrills();
-            return ResponseEntity.ok(drills);
+            List<Map<String, Object>> response = drills.stream()
+                .map(DrillInfo::toMap)
+                .collect(Collectors.toList());
+            
+            log.info("응답 데이터: {}", response);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             log.error("훈련 목록 조회 실패: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
+            return ResponseEntity.internalServerError().body(
+                Collections.singletonMap("error", "훈련 목록을 불러오는데 실패했습니다.")
+            );
         }
     }
 
     @GetMapping("/{drillId}/stats")
-    public ResponseEntity<List<DepartmentRating>> getDrillStats(@PathVariable Integer drillId) {
-        try {
-            List<DepartmentRating> stats = drillService.getDrillStats(drillId);
-            return ResponseEntity.ok(stats);
-        } catch (Exception e) {
-            log.error("훈련 통계 조회 실패: {}", e.getMessage(), e);
-            return ResponseEntity.internalServerError().build();
-        }
+    public ResponseEntity<List<Map<String, Object>>> getDrillStats(@PathVariable("drillId") Integer drillId) {
+        List<Map<String, Object>> stats = drillService.getDepartmentRatings(drillId);
+        return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/api/drills/{drillId}")

@@ -14,6 +14,7 @@ import java.util.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import lombok.extern.slf4j.Slf4j;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -31,6 +32,8 @@ public class DrillService {
     private RecipientRepository recipientRepository;  // EmployeeRepository 대신 RecipientRepository 사용
     @Autowired
     private DrillResultRepository resultRepository;
+    @Autowired
+    private DrillResultRepository drillResultRepository;
 
     public DrillInfo createNewDrill() {
         DrillInfo drillInfo = new DrillInfo();
@@ -137,14 +140,54 @@ public class DrillService {
     }
 
     public List<DrillInfo> getAllDrills() {
-        return drillInfoRepository.findAll();
+        log.info("모든 훈련 목록 조회 시작");
+        List<DrillInfo> drills = drillInfoRepository.findAll();
+        log.info("조회된 훈련 수: {}", drills.size());
+        
+        // 각 훈련별 수신자 수 설정
+        for (DrillInfo drill : drills) {
+            List<DrillMailContent> contents = mailContentRepository.findByDrillInfo_DrillId(drill.getDrillId());
+            drill.setRecipientCount(contents.size());
+            log.info("훈련 ID: {}, 날짜: {}, 수신자 수: {}", 
+                drill.getDrillId(), drill.getDrillDate(), contents.size());
+        }
+        
+        return drills;
     }
 
-    public List<DepartmentRating> getDrillStats(Integer drillId) {
-        return departmentRatingRepository.findByDrillId(drillId);
+    public List<Map<String, Object>> getDrillStats(Integer drillId) {
+        log.info("부서별 통계 조회 시작 - drillId: {}", drillId);
+        List<DepartmentRating> ratings = departmentRatingRepository.findByDrillId(drillId);
+        
+        return ratings.stream().map(rating -> {
+            Map<String, Object> stat = new HashMap<>();
+            Integer deptId = rating.getDepartment().getDeptId();
+            
+            // 부서 정보
+            stat.put("department", Map.of(
+                "deptId", deptId,
+                "deptName", rating.getDepartment().getDeptName() != null ? 
+                           rating.getDepartment().getDeptName() : 
+                           "부서 " + deptId
+            ));
+            
+            // 통계 정보
+            int totalEmployees = mailContentRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptId(
+                drillId, deptId);
+            int clickedCount = drillResultRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
+                drillId, deptId, "Y");
+            
+            stat.put("totalEmployees", totalEmployees);
+            stat.put("clickedCount", clickedCount);
+            stat.put("deptOpenRatio", rating.getDeptOpenRatio());
+            stat.put("deptRating", rating.getDeptRating());
+            
+            log.info("부서 {} 통계: 전체={}, 클릭={}, 비율={}%, 등급={}", 
+                deptId, totalEmployees, clickedCount, rating.getDeptOpenRatio(), rating.getDeptRating());
+            
+            return stat;
+        }).collect(Collectors.toList());
     }
-
-    // ... getAllDrills()와 getDrillStats() 메서드는 그대로 유지 ...
 
     @Getter
     public static class DepartmentStats {
@@ -157,6 +200,41 @@ public class DrillService {
 
         public void addClicked() {
             clicked++;
+        }
+    }
+
+    public List<Map<String, Object>> getDepartmentRatings(Integer drillId) {
+        log.info("부서별 훈련 통계 조회 시작 - drillId: {}", drillId);
+        
+        try {
+            List<DepartmentRating> ratings = departmentRatingRepository.findByDrillId(drillId);
+            
+            if (ratings.isEmpty()) {
+                log.warn("해당 훈련에 대한 부서별 통계가 없습니다 - drillId: {}", drillId);
+                // 통계가 없으면 자동으로 계산
+                updateDepartmentRatings(drillId);
+                ratings = departmentRatingRepository.findByDrillId(drillId);
+            }
+            
+            return ratings.stream().map(rating -> {
+                Map<String, Object> stat = new HashMap<>();
+                Department dept = rating.getDepartment();
+                
+                stat.put("deptId", dept.getDeptId());
+                stat.put("deptName", dept.getDeptName() != null ? dept.getDeptName() : "부서 " + dept.getDeptId());
+                stat.put("totalEmployees", mailContentRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptId(
+                    drillId, dept.getDeptId()));
+                stat.put("clickedCount", drillResultRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
+                    drillId, dept.getDeptId(), "Y"));
+                stat.put("openRatio", rating.getDeptOpenRatio());
+                stat.put("rating", rating.getDeptRating());
+                
+                return stat;
+            }).collect(Collectors.toList());
+            
+        } catch (Exception e) {
+            log.error("통계 데이터 조회/계산 중 오류 발생 - drillId: {}", e);
+            throw new RuntimeException("부서별 통계 처리 중 오류가 발생했습니다", e);
         }
     }
 } 
