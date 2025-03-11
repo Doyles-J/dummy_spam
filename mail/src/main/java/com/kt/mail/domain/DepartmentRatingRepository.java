@@ -11,4 +11,6 @@ import java.util.List;
 public interface DepartmentRatingRepository extends JpaRepository<DepartmentRating, Long> {
     void deleteByDrillId(Integer drillId);
     List<DepartmentRating> findByDrillId(Integer drillId);
+    List<DepartmentRating> findByDrillIdIn(List<Integer> drillIds);
+    
 } 

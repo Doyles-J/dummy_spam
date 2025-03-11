@@ -208,76 +208,108 @@ public class DrillService {
         try {
             log.info("부서별 통계 조회 시작 - drillId: {}", drillId);
             
-            // 1. 훈련 정보 조회
-            DrillInfo drillInfo = drillInfoRepository.findById(Long.valueOf(drillId))
+            // 1. 선택된 날짜의 모든 훈련 ID 조회
+            DrillInfo selectedDrill = drillInfoRepository.findById(drillId.longValue())
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 훈련입니다: " + drillId));
-            log.info("훈련 정보 조회 완료 - drillId: {}, 날짜: {}", drillId, drillInfo.getDrillDate());
-
-            // 2. 메일 컨텐츠 조회
-            List<DrillMailContent> contents = mailContentRepository.findByDrillInfo_DrillId(drillId);
-            log.info("메일 컨텐츠 조회 완료 - 건수: {}", contents.size());
-
-            // 3. 부서별 대상자 수 집계
-            Map<Integer, Integer> deptTotalMap = new HashMap<>();
-            for (DrillMailContent content : contents) {
-                try {
-                    Recipient recipient = recipientRepository.findById(content.getEmpId())
-                        .orElseThrow(() -> new RuntimeException("직원 정보를 찾을 수 없습니다: " + content.getEmpId()));
-                    
-                    deptTotalMap.merge(recipient.getDeptId(), 1, Integer::sum);
-                    log.debug("대상자 집계 - empId: {}, deptId: {}", content.getEmpId(), recipient.getDeptId());
-                } catch (Exception e) {
-                    log.error("대상자 정보 조회 실패 - empId: {}", content.getEmpId(), e);
-                }
-            }
-            log.info("부서별 대상자 수 집계 완료 - 부서 수: {}, 상세: {}", deptTotalMap.size(), deptTotalMap);
-
-            // 4. 클릭 결과 조회
-            List<DrillResult> results = drillResultRepository.findByDrillInfo_DrillIdAndOpenYn(drillId, "Y");
-            log.info("클릭 결과 조회 완료 - 건수: {}", results.size());
-
-            // 5. 부서별 클릭 수 집계
-            Map<Integer, Integer> deptClickMap = new HashMap<>();
-            for (DrillResult result : results) {
-                try {
-                    Integer empId = Integer.valueOf(result.getEmpIdHash());
-                    Recipient recipient = recipientRepository.findById(empId)
-                        .orElseThrow(() -> new RuntimeException("직원 정보를 찾을 수 없습니다: " + empId));
-                    
-                    deptClickMap.merge(recipient.getDeptId(), 1, Integer::sum);
-                    log.debug("클릭 집계 - empId: {}, deptId: {}", empId, recipient.getDeptId());
-                } catch (Exception e) {
-                    log.error("클릭 직원 정보 조회 실패 - empIdHash: {}", result.getEmpIdHash(), e);
-                }
-            }
-            log.info("부서별 클릭 수 집계 완료 - 부서 수: {}, 상세: {}", deptClickMap.size(), deptClickMap);
-
-            // 6. 부서별 통계 생성
-            List<Map<String, Object>> stats = new ArrayList<>();
-            for (Map.Entry<Integer, Integer> entry : deptTotalMap.entrySet()) {
-                Integer deptId = entry.getKey();
-                Integer totalCount = entry.getValue();
-                Integer clickCount = deptClickMap.getOrDefault(deptId, 0);
-                
-                double openRatio = totalCount > 0 ? (clickCount * 100.0 / totalCount) : 0.0;
-                
-                Map<String, Object> stat = new HashMap<>();
-                stat.put("deptId", deptId);
-                stat.put("deptName", "부서 " + deptId); // 부서명이 있다면 해당 부서명 사용
-                stat.put("totalEmployees", totalCount);
-                stat.put("clickedCount", clickCount);
-                stat.put("openRatio", openRatio);
-                stat.put("rating", calculateSecurityRating(openRatio));
-                
-                stats.add(stat);
-            }
             
-            log.info("부서별 통계 생성 완료 - 부서 수: {}", stats.size());
-            return stats;
+            LocalDateTime startOfDay = selectedDrill.getDrillDate().toLocalDate().atStartOfDay();
+            LocalDateTime endOfDay = startOfDay.plusDays(1);
+            
+            List<DrillInfo> sameDayDrills = drillInfoRepository.findByDrillDateBetween(startOfDay, endOfDay);
+            List<Integer> drillIds = sameDayDrills.stream()
+                .map(DrillInfo::getDrillId)
+                .collect(Collectors.toList());
+            
+            log.info("같은 날짜의 훈련 ID 목록: {}", drillIds);
+
+            // 2. 부서별 통계 집계
+            Map<Integer, DepartmentSummary> deptSummaryMap = new HashMap<>();
+
+            // 2-1. 메일 발송 대상자 수 집계
+            List<DrillMailContent> allContents = mailContentRepository.findByDrillInfo_DrillIdIn(drillIds);
+            for (DrillMailContent content : allContents) {
+                Recipient recipient = recipientRepository.findById(content.getEmpId())
+                    .orElseThrow(() -> new RuntimeException("직원 정보를 찾을 수 없습니다: " + content.getEmpId()));
+                
+                // getDepartment() 대신 getDeptId()와 부서명 생성 사용
+                Integer deptId = recipient.getDeptId();
+                String deptName = "부서 " + deptId;
+                
+                deptSummaryMap.computeIfAbsent(deptId,
+                    k -> new DepartmentSummary(deptName)).addRecipient();
+            }
+
+            // 2-2. 클릭 수와 미탐지율 집계
+            List<DepartmentRating> allRatings = departmentRatingRepository.findByDrillIdIn(drillIds);
+            for (DepartmentRating rating : allRatings) {
+                // Department의 이름을 직접 가져오거나 기본값 설정
+                String deptName = rating.getDepartment() != null ? 
+                    "부서 " + rating.getDepartment().getDeptId() : "알 수 없는 부서";
+                
+                DepartmentSummary summary = deptSummaryMap.computeIfAbsent(
+                    rating.getDepartment().getDeptId(),
+                    k -> new DepartmentSummary(deptName));
+                
+                // DrillResult에서 클릭 수를 직접 조회
+                long clickCount = drillResultRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
+                    rating.getDrillId(), 
+                    rating.getDepartment().getDeptId(), 
+                    "Y"
+                );
+                
+                summary.addClickCount((int) clickCount);
+                summary.addOpenRatio(rating.getDeptOpenRatio());
+            }
+
+            // 3. 결과 변환
+            return deptSummaryMap.entrySet().stream()
+                .map(entry -> {
+                    DepartmentSummary summary = entry.getValue();
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("deptId", entry.getKey());
+                    result.put("deptName", summary.getDeptName());
+                    result.put("totalEmployees", summary.getTotalRecipients());
+                    result.put("clickedCount", summary.getTotalClicks());
+                    result.put("openRatio", summary.getAverageOpenRatio());
+                    result.put("rating", calculateSecurityRating(summary.getAverageOpenRatio()));
+                    return result;
+                })
+                .collect(Collectors.toList());
                 
         } catch (Exception e) {
             log.error("부서별 통계 조회 중 오류 발생. drillId: {}", drillId, e);
             throw new RuntimeException("부서별 통계 조회 실패", e);
+        }
+    }
+
+    // 부서별 통계 요약을 위한 내부 클래스 추가
+    @Getter
+    private static class DepartmentSummary {
+        private final String deptName;
+        private int totalRecipients = 0;
+        private int totalClicks = 0;
+        private double totalOpenRatio = 0.0;
+        private int ratingCount = 0;
+
+        public DepartmentSummary(String deptName) {
+            this.deptName = deptName != null ? deptName : "알 수 없는 부서";
+        }
+
+        public void addRecipient() {
+            totalRecipients++;
+        }
+
+        public void addClickCount(int clicks) {
+            totalClicks += clicks;
+        }
+
+        public void addOpenRatio(double ratio) {
+            totalOpenRatio += ratio;
+            ratingCount++;
+        }
+
+        public double getAverageOpenRatio() {
+            return ratingCount > 0 ? totalOpenRatio / ratingCount : 0.0;
         }
     }
 
