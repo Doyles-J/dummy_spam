@@ -26,7 +26,7 @@ const navigateToResults = () => {
         </button>
         <button @click="navigateToResults" class="btn btn-secondary">
           <span class="icon">📊</span>
-          보안 결과 확인
+          대응 결과 확인
         </button>
       </div>
     </div>

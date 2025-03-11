@@ -343,23 +343,43 @@ export default {
       }
 
       try {
-        // 타임아웃 증가 (15초)
+        // 로딩 상태 표시
+        this.loading = true;
+        
+        // 타임아웃 없이 요청 보내기
         const response = await axiosInst.post('/drill/send', {
           recipients: this.recipients,
           subject: this.emailSubject,
           body: this.emailBody
-        }, { timeout: 15000 }); // 15초로 타임아웃 증가
+        }, { 
+          timeout: 0  // 타임아웃 비활성화
+        });
 
+        // 응답 처리
         if (response.data.success) {
           localStorage.setItem('lastDrillId', response.data.drillId);
           this.showResults = true;
         } else {
-          alert(response.data.message);
+          alert(response.data.message || '메일 발송에 실패했습니다.');
         }
       } catch (error) {
         console.error('훈련 메일 발송 실패:', error);
-        alert('메일 발송 중 오류가 발생했습니다. ' + 
-              (error.code === 'ECONNABORTED' ? '요청 시간이 초과되었습니다.' : error.message));
+        
+        // 오류 메시지 개선
+        let errorMessage = '메일 발송 중 오류가 발생했습니다.';
+        if (error.code === 'ECONNABORTED') {
+          errorMessage += ' 요청 시간이 초과되었습니다.';
+        } else if (error.response) {
+          // 서버에서 응답이 왔지만 오류 상태코드인 경우
+          errorMessage += ` (${error.response.status}: ${error.response.data.message || '서버 오류'})`;
+        } else if (error.message) {
+          errorMessage += ` (${error.message})`;
+        }
+        
+        alert(errorMessage);
+      } finally {
+        // 로딩 상태 해제
+        this.loading = false;
       }
     },
 
