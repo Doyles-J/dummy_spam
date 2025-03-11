@@ -4,8 +4,27 @@
       <h1 class="page-title">모의 위협메일 발송 시스템</h1>
       <p class="page-description">사이버 공격 대응훈련을 위한 모의 위협메일을 발송합니다</p>
     </div>
-
-    <div v-if="showResults" class="card results-card">
+    <div v-if="sending" class="card results-card">
+      <div class="card-header">
+        <div class="section-icon">⏳</div>
+        <h3 class="section-title">발송 진행 중</h3>
+      </div>
+      <div class="card-body">
+        <div class="sending-message">
+          <div class="sending-icon">
+            <div class="loading-spinner"></div>
+          </div>
+          <div class="sending-content">
+            <h3 class="sending-title">모의 위협메일을 발송중입니다</h3>
+            <p class="sending-description">
+              총 {{ recipients.length }}명의 사용자에게 메일을 발송하고 있습니다.<br>
+              잠시 기다려주세요.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div v-else-if="showResults" class="card results-card">
       <div class="card-header">
         <div class="section-icon">✅</div>
         <h3 class="section-title">발송 결과</h3>
@@ -218,7 +237,7 @@
           :class="{ 'disabled': recipients.length === 0 }"
         >
           <span class="btn-icon">📤</span>
-          발송
+          {{ loading ? '발송 중...' : '발송' }}
         </button>
       </div>
     </div>
@@ -238,6 +257,7 @@ export default {
       emailSubject: "[ALP-B]접속 테스트용 이메일입니다",
       emailBody: "아래 링크에 접속해주세요",
       showResults: false,
+      sending: false,
       loading: false,
       selectedDepartment: "all",
       departments: [],
@@ -342,9 +362,10 @@ export default {
         return;
       }
 
+      this.sending = true;
+      this.loading = true;
+
       try {
-        // 로딩 상태 표시
-        this.loading = true;
         
         // 타임아웃 없이 요청 보내기
         const response = await axiosInst.post('/drill/send', {
@@ -358,12 +379,17 @@ export default {
         // 응답 처리
         if (response.data.success) {
           localStorage.setItem('lastDrillId', response.data.drillId);
-          this.showResults = true;
+          this.sending = false; // 발송 중 화면 숨기기
+          this.showResults = true; // 결과 화면 표시
         } else {
+          this.sending = false; // 발송 중 화면 숨기기
           alert(response.data.message || '메일 발송에 실패했습니다.');
         }
       } catch (error) {
         console.error('훈련 메일 발송 실패:', error);
+        
+        // 발송 중 화면 숨기기
+        this.sending = false;
         
         // 오류 메시지 개선
         let errorMessage = '메일 발송 중 오류가 발생했습니다.';
@@ -388,11 +414,12 @@ export default {
     },
 
     resetSystem() {
-      this.loadEmployees(); // initialEmployees 대신 데이터를 다시 로드
+      this.loadEmployees();
       this.recipients = [];
       this.selectedEmployees = [];
       this.selectedRecipients = [];
       this.showResults = false;
+      this.sending = false; // 발송 중 상태 초기화
     },
     selectAllInDepartment() {
       const employeesToSelect = this.filteredEmployees
@@ -778,6 +805,70 @@ export default {
   color: #4b5563;
   margin-left: auto;
   font-size: 0.875rem;
+}
+.sending-message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #eff6ff;
+  border: 1px solid #dbeafe;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.sending-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #3b82f6;
+  color: white;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.sending-content {
+  flex: 1;
+}
+
+.sending-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e40af;
+  margin-bottom: 0.25rem;
+}
+
+.sending-description {
+  color: #1e40af;
+}
+
+.loading-spinner {
+  width: 1.5rem;
+  height: 1.5rem;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.loading-spinner-small {
+  display: inline-block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 @media (max-width: 768px) {
