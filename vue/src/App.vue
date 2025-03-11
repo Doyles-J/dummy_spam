@@ -52,6 +52,7 @@ import { RouterLink, RouterView } from 'vue-router'
 
 .footer-container {
   display: flex;
+  height: 100%;
   align-items: right;
   justify-content: right;
   max-width: 1200px;
@@ -132,6 +133,7 @@ import { RouterLink, RouterView } from 'vue-router'
   max-width: 1200px;
   margin: 0 auto;
   padding: 1.5rem;
+  min-height: 630px;
 }
 
 @media (max-width: 768px) {
