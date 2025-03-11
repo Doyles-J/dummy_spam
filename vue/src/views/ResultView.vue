@@ -1,30 +1,30 @@
 <script>
-import axiosInst from '@/axios';
-import Chart from 'chart.js/auto';
+import axiosInst from "@/axios";
+import Chart from "chart.js/auto";
 
 export default {
   data() {
     return {
       drills: [],
-      selectedDrillId: null,
+      selectedDrillId: "",
       departmentStats: [],
       loading: false,
       error: null,
       groupedDrills: {},
       selectedDate: null,
       chartInstance: null,
-      chartAnimationInProgress: false
-    }
+      chartAnimationInProgress: false,
+    };
   },
-  
+
   async mounted() {
     await this.loadDrills();
   },
-  
+
   beforeUnmount() {
     this.destroyChart();
   },
-  
+
   methods: {
     destroyChart() {
       if (this.chartInstance) {
@@ -33,14 +33,14 @@ export default {
           this.chartInstance.options.animations = false;
           this.chartInstance.options.transitions = false;
         }
-        
+
         try {
           this.chartInstance.stop();
           this.chartInstance.destroy();
         } catch (e) {
-          console.error('차트 제거 중 오류:', e);
+          console.error("차트 제거 중 오류:", e);
         }
-        
+
         this.chartInstance = null;
       }
       this.chartAnimationInProgress = false;
@@ -48,10 +48,10 @@ export default {
 
     async loadDrills() {
       try {
-        console.log('훈련 목록 로딩 시작');
-        const response = await axiosInst.get('/drill/list');
-        console.log('서버 응답:', response.data);
-        
+        console.log("훈련 목록 로딩 시작");
+        const response = await axiosInst.get("/drill/list");
+        console.log("서버 응답:", response.data);
+
         this.drills = response.data;
         this.groupedDrills = this.drills.reduce((groups, drill) => {
           const date = this.formatDate(drill.date);
@@ -61,186 +61,239 @@ export default {
           groups[date].push(drill);
           return groups;
         }, {});
-        
-        console.log('그룹화된 데이터:', this.groupedDrills);
+
+        console.log("그룹화된 데이터:", this.groupedDrills);
       } catch (error) {
-        console.error('훈련 목록 로드 실패:', error);
-        this.error = '훈련 목록을 불러오는데 실패했습니다.';
+        console.error("훈련 목록 로드 실패:", error);
+        this.error = "훈련 목록을 불러오는데 실패했습니다.";
       }
     },
-    
+
     formatDate(dateStr) {
-      if (!dateStr) return '';
-      return dateStr.split('T')[0]; // YYYY-MM-DD 부분만 반환
+      if (!dateStr) return "";
+      return dateStr.split("T")[0]; // YYYY-MM-DD 부분만 반환
     },
 
     async loadDrillStats() {
       if (!this.selectedDrillId) return;
-      
+
       try {
         this.loading = true;
         this.destroyChart();
 
-        const response = await axiosInst.get(`/drill/${this.selectedDrillId}/stats`);
-        
+        const response = await axiosInst.get(
+          `/drill/${this.selectedDrillId}/stats`
+        );
+
         if (!response.data || response.data.length === 0) {
           this.departmentStats = [];
-          this.renderMessage('해당 훈련에 대한 부서별 통계가 없습니다.');
+          this.renderMessage("해당 훈련에 대한 부서별 통계가 없습니다.");
         } else {
-          this.departmentStats = response.data.map(stat => ({
+          this.departmentStats = response.data.map((stat) => ({
             deptId: stat.deptId,
             deptName: stat.deptName,
             totalEmployees: stat.totalEmployees || 0,
             clickedCount: stat.clickedCount || 0,
             openRatio: stat.openRatio || 0,
-            rating: stat.rating || 'N/A'
+            rating: stat.rating || "N/A",
           }));
-          
+
           if (this.departmentStats.length > 0) {
             await this.$nextTick();
             await this.renderChart(false);
           }
         }
       } catch (error) {
-        console.error('통계 데이터 로드 실패:', error);
-        this.error = '통계 데이터를 불러오는데 실패했습니다.';
-        this.renderMessage('통계 데이터를 불러오는데 실패했습니다.', '#dc2626');
+        console.error("통계 데이터 로드 실패:", error);
+        this.error = "통계 데이터를 불러오는데 실패했습니다.";
+        this.renderMessage("통계 데이터를 불러오는데 실패했습니다.", "#dc2626");
       } finally {
         this.loading = false;
       }
     },
 
-    renderMessage(message, color = '#666') {
+    renderMessage(message, color = "#666") {
       this.destroyChart();
-      
+
       const canvas = this.$refs.chartCanvas;
       if (!canvas) {
-        console.error('메시지 렌더링을 위한 캔버스를 찾을 수 없음');
+        console.error("메시지 렌더링을 위한 캔버스를 찾을 수 없음");
         return;
       }
-      
-      const ctx = canvas.getContext('2d');
+
+      const ctx = canvas.getContext("2d");
       if (!ctx) {
-        console.error('메시지 렌더링을 위한 컨텍스트를 가져올 수 없음');
+        console.error("메시지 렌더링을 위한 컨텍스트를 가져올 수 없음");
         return;
       }
-      
+
       canvas.width = 600;
       canvas.height = 300;
-      
+
       ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      ctx.font = '14px Arial';
-      ctx.textAlign = 'center';
+
+      ctx.font = "14px Arial";
+      ctx.textAlign = "center";
       ctx.fillStyle = color;
-      ctx.fillText(message, canvas.width/2, canvas.height/2);
+      ctx.fillText(message, canvas.width / 2, canvas.height / 2);
     },
 
     async renderChart(useAnimation = false) {
       try {
         this.destroyChart();
-        
+
         if (!this.departmentStats || this.departmentStats.length === 0) {
-          this.renderMessage('해당 훈련에 대한 부서별 통계가 없습니다.');
+          this.renderMessage("해당 훈련에 대한 부서별 통계가 없습니다.");
           return;
         }
-        
+
         const canvas = this.$refs.chartCanvas;
         if (!canvas) {
-          console.error('캔버스 요소를 찾을 수 없음');
+          console.error("캔버스 요소를 찾을 수 없음");
           return;
         }
-        
+
         canvas.width = 600;
         canvas.height = 300;
-        
-        const ctx = canvas.getContext('2d');
+
+        const ctx = canvas.getContext("2d");
         if (!ctx) {
-          console.error('캔버스 컨텍스트를 가져올 수 없음');
+          console.error("캔버스 컨텍스트를 가져올 수 없음");
           return;
         }
-        
-        const labels = this.departmentStats.map(stat => stat.deptName || `부서 ${stat.deptId}`);
-        const data = this.departmentStats.map(stat => stat.openRatio || 0);
-        
+
+        const labels = this.departmentStats.map(
+          (stat) => stat.deptName || `부서 ${stat.deptId}`
+        );
+        const data = this.departmentStats.map((stat) => stat.openRatio || 0);
+
         await this.$nextTick();
-        
+
         this.chartAnimationInProgress = useAnimation;
-        
+
         this.chartInstance = new Chart(ctx, {
-          type: 'bar',
+          type: "bar",
           data: {
             labels: labels,
-            datasets: [{
-              label: '링크 미탐지율 (%)',
-              data: data,
-              backgroundColor: 'rgba(255, 59, 48, 0.7)',
-              borderColor: 'rgba(255, 59, 48, 1)',
-              borderWidth: 1
-            }]
+            datasets: [
+              {
+                label: "링크 클릭률 (%)",
+                data: data,
+                backgroundColor: function (context) {
+                  const value = context.raw;
+                  if (value >= 50) return "rgba(239, 68, 68, 0.7)"; // 빨간색 (높음)
+                  if (value >= 20) return "rgba(234, 179, 8, 0.7)"; // 노란색 (중간)
+                  return "rgba(34, 197, 94, 0.7)"; // 초록색 (낮음)
+                },
+                borderColor: function (context) {
+                  const value = context.raw;
+                  if (value >= 50) return "rgba(239, 68, 68, 1)"; // 진한 빨간색
+                  if (value >= 20) return "rgba(234, 179, 8, 1)"; // 진한 노란색
+                  return "rgba(34, 197, 94, 1)"; // 진한 초록색
+                },
+                borderWidth: 1,
+              },
+            ],
           },
           options: {
             responsive: false,
             maintainAspectRatio: false,
-            animation: useAnimation ? {
-              duration: 300,
-              onComplete: () => {
-                this.chartAnimationInProgress = false;
-              }
-            } : false,
+            animation: useAnimation
+              ? {
+                  duration: 300,
+                  onComplete: () => {
+                    this.chartAnimationInProgress = false;
+                  },
+                }
+              : false,
             scales: {
               y: {
                 beginAtZero: true,
                 max: 100,
                 grid: {
-                  color: 'rgba(0, 0, 0, 0.05)'
-                }
+                  color: "rgba(0, 0, 0, 0.05)",
+                },
               },
               x: {
                 grid: {
-                  display: false
-                }
-              }
+                  display: false,
+                },
+              },
             },
             plugins: {
               legend: {
                 display: true,
-                position: 'top',
+                position: "top",
                 labels: {
                   boxWidth: 15,
                   usePointStyle: true,
-                  pointStyle: 'rect'
-                }
+                  pointStyle: "rect",
+                  generateLabels: (chart) => {
+                    const data = chart.data.datasets[0].data;
+                    const average =
+                      data.reduce((a, b) => a + b, 0) / data.length;
+
+                    let color;
+                    if (average >= 50) {
+                      color = [
+                        "rgba(239, 68, 68, 0.7)",
+                        "rgba(239, 68, 68, 1)",
+                      ]; // 빨간색
+                    } else if (average >= 20) {
+                      color = [
+                        "rgba(234, 179, 8, 0.7)",
+                        "rgba(234, 179, 8, 1)",
+                      ]; // 노란색
+                    } else {
+                      color = [
+                        "rgba(34, 197, 94, 0.7)",
+                        "rgba(34, 197, 94, 1)",
+                      ]; // 초록색
+                    }
+
+                    return [
+                      {
+                        text: "링크 클릭률 (%)",
+                        fillStyle: color[0],
+                        strokeStyle: color[1],
+                        lineWidth: 1,
+                        hidden: false,
+                        index: 0,
+                        datasetIndex: 0,
+                      },
+                    ];
+                  },
+                },
               },
               title: {
-                display: false
-              }
-            }
-          }
+                display: false,
+              },
+            },
+          },
         });
       } catch (error) {
-        console.error('차트 렌더링 실패:', error);
+        console.error("차트 렌더링 실패:", error);
         this.chartAnimationInProgress = false;
-        this.renderMessage('차트 렌더링에 실패했습니다.', '#dc2626');
+        this.renderMessage("차트 렌더링에 실패했습니다.", "#dc2626");
       }
     },
 
     findDateByDrillId(drillId) {
       for (const [date, drills] of Object.entries(this.groupedDrills)) {
-        if (drills.some(drill => drill.id === drillId)) {
+        if (drills.some((drill) => drill.id === drillId)) {
           return date;
         }
       }
       return null;
-    }
+    },
   },
-  
+
   computed: {
     dateOptions() {
       return Object.keys(this.groupedDrills).sort().reverse();
-    }
+    },
   },
-  
+
   watch: {
     selectedDrillId(newId) {
       this.destroyChart();
@@ -250,18 +303,20 @@ export default {
       } else {
         this.selectedDate = null;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <template>
   <div class="result-container">
     <div class="page-header">
       <h1 class="page-title">모의 위협메일 대응 결과</h1>
-      <p class="page-description">부서별 보안 인식 수준과 대응 결과를 확인하세요</p>
+      <p class="page-description">
+        부서별 보안 인식 수준과 대응 결과를 확인하세요
+      </p>
     </div>
-    
+
     <div class="card">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <!-- Dropdown for selecting drill date -->
@@ -270,81 +325,98 @@ export default {
             <div class="section-icon">📅</div>
             <h2 class="section-title">훈련 날짜 선택</h2>
           </div>
-          
-          <select 
-            id="drill-select" 
-            v-model="selectedDrillId" 
+
+          <select
+            id="drill-select"
+            v-model="selectedDrillId"
             class="select-control"
             @change="loadDrillStats"
           >
-            <option value="">날짜를 선택하세요</option>
-            <option 
-              v-for="date in dateOptions" 
+            <option disabled selected value="">날짜를 선택하세요</option>
+            <option
+              v-for="date in dateOptions"
               :key="date"
               :value="groupedDrills[date][0].id"
             >
               {{ date }} ({{ groupedDrills[date].length }}회 실시)
             </option>
           </select>
-          
+
           <!-- 선택된 날짜의 상세 정보 -->
-          <div v-if="selectedDrillId && selectedDate && groupedDrills[selectedDate]" class="date-details">
+          <div
+            v-if="
+              selectedDrillId && selectedDate && groupedDrills[selectedDate]
+            "
+            class="date-details"
+          >
             <h4 class="date-details-title">해당 날짜 훈련 정보</h4>
             <ul class="date-details-list">
-              <li v-for="drill in groupedDrills[selectedDate]"
-                  :key="drill.id"
-                  class="date-details-item"
+              <li
+                v-for="drill in groupedDrills[selectedDate]"
+                :key="drill.id"
+                class="date-details-item"
               >
-                <span class="time-badge">{{ drill.date.split('T')[1].substring(0, 8) }}</span>
-                <span class="recipient-count">{{ drill.recipients.length }}명 대상</span>
+                <span class="time-badge">{{
+                  drill.date.split("T")[1].substring(0, 8)
+                }}</span>
+                <span class="recipient-count"
+                  >{{ drill.recipients.length }}명 대상</span
+                >
               </li>
             </ul>
           </div>
         </div>
-        
+
         <!-- Bar chart -->
         <div class="md:col-span-2">
           <div class="section-header">
             <div class="section-icon">📊</div>
             <h2 class="section-title">부서별 링크 미탐지율</h2>
           </div>
-          
+
           <div v-if="!selectedDrillId" class="chart-placeholder">
             <div class="placeholder-icon">📈</div>
             <p>왼쪽에서 훈련회차를 선택해주세요.</p>
           </div>
-          
+
           <div v-else>
             <div class="chart-container">
               <div v-if="departmentStats.length > 0" class="debug-info">
                 {{ departmentStats.length }}개 부서 데이터 로드됨
               </div>
-              
-              <canvas ref="chartCanvas" class="chart-canvas" width="600" height="300"></canvas>
-              
+
+              <canvas
+                ref="chartCanvas"
+                class="chart-canvas"
+                width="600"
+                height="300"
+              ></canvas>
+
               <div v-if="loading" class="chart-loading">
                 <div class="loading-spinner"></div>
                 <p>데이터 로딩 중...</p>
               </div>
             </div>
-            
-            <p class="chart-note">※링크 미탐지율 : 모의 악성메일 내 링크를 클릭한 인원의 비율</p>
+
+            <p class="chart-note">
+              ※링크 미탐지율 : 모의 악성메일 내 링크를 클릭한 인원의 비율
+            </p>
           </div>
         </div>
       </div>
-      
+
       <!-- Detailed results table -->
       <div v-if="selectedDrillId" class="results-table-section">
         <div class="section-header">
           <div class="section-icon">📋</div>
           <h2 class="section-title">상세 결과</h2>
         </div>
-        
+
         <div v-if="departmentStats.length === 0" class="empty-state">
           <div class="empty-icon">🔍</div>
           <p>해당 훈련에 대한 부서별 통계가 없습니다.</p>
         </div>
-        
+
         <div v-else class="table-container">
           <table class="results-table">
             <thead>
@@ -363,12 +435,18 @@ export default {
                 <td>{{ stat.clickedCount }}명</td>
                 <td>
                   <div class="ratio-display">
-                    <div class="ratio-bar" :style="`width: ${stat.openRatio}%`"></div>
+                    <div
+                      class="ratio-bar"
+                      :style="`width: ${stat.openRatio}%`"
+                    ></div>
                     <span>{{ Number(stat.openRatio).toFixed(1) }}%</span>
                   </div>
                 </td>
                 <td>
-                  <span class="security-rating" :class="`rating-${stat.rating}`">
+                  <span
+                    class="security-rating"
+                    :class="`rating-${stat.rating}`"
+                  >
                     {{ stat.rating }}
                   </span>
                 </td>
@@ -688,11 +766,10 @@ export default {
   .card {
     padding: 1rem;
   }
-  
+
   .results-table th,
   .results-table td {
     padding: 0.5rem;
   }
 }
 </style>
-
