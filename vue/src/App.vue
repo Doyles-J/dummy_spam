@@ -7,7 +7,7 @@ import { RouterLink, RouterView } from 'vue-router'
     <div class="header-container">
       <div class="logo">
         <img src="/logo.png" alt="Logo" class="logo-image" />
-        <span class="logo-text">Secure 지능형위협메일차단</span>
+        <span class="logo-text">지능형 위협메일 모의훈련</span>
       </div>
       <nav class="main-nav">
         <RouterLink to="/" class="nav-item">메인페이지</RouterLink>

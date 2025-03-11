@@ -258,7 +258,7 @@ export default {
 <template>
   <div class="result-container">
     <div class="page-header">
-      <h1 class="page-title">모의 악성메일 보안 결과</h1>
+      <h1 class="page-title">모의 위협메일 대응 결과</h1>
       <p class="page-description">부서별 보안 인식 수준과 대응 결과를 확인하세요</p>
     </div>
     

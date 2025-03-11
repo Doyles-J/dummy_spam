@@ -1,8 +1,8 @@
 <template>
   <div class="sending-container">
     <div class="page-header">
-      <h1 class="page-title">모의 악성메일 발송 시스템</h1>
-      <p class="page-description">보안 인식 향상을 위한 모의 악성메일을 발송하세요</p>
+      <h1 class="page-title">모의 위협메일 발송 시스템</h1>
+      <p class="page-description">사이버 공격 대응훈련을 위한 모의 위협메일을 발송합니다</p>
     </div>
 
     <div v-if="showResults" class="card results-card">
@@ -16,8 +16,8 @@
           <div class="success-content">
             <h3 class="success-title">발송 완료</h3>
             <p class="success-description">
-              총 {{ recipients.length }}명의 사용자에게 모의 악성메일이
-              발송되었습니다!
+              총 {{ recipients.length }}명의 사용자에게 모의 위협메일이
+              발송되었습니다.
             </p>
           </div>
         </div>
@@ -42,7 +42,7 @@
           @click="resetSystem"
           class="btn btn-primary btn-full"
         >
-          시스템 초기화
+          처음으로
         </button>
       </div>
     </div>

@@ -16,13 +16,13 @@ const navigateToResults = () => {
 <template>
   <div class="home-container">
     <div class="hero-section">
-      <h1 class="hero-title">Secure 지능형위협메일차단</h1>
-      <p class="hero-subtitle">AI 분석으로 더 강력해진 위협 메일 차단 솔루션</p>
+      <h1 class="hero-title">지능형 위협메일 모의훈련 솔루션</h1>
+      <p class="hero-subtitle">위협메일 대응훈련과 모니터링을 통한 정보 보안 강화</p>
       
       <div class="hero-actions">
         <button @click="navigateToSending" class="btn btn-primary">
           <span class="icon">📤</span>
-          모의 악성메일 발송
+          모의 위협메일 발송
         </button>
         <button @click="navigateToResults" class="btn btn-secondary">
           <span class="icon">📊</span>
@@ -34,20 +34,20 @@ const navigateToResults = () => {
     <div class="info-section">
       <div class="info-card">
         <div class="info-icon">🔒</div>
-        <h3>모의 악성메일 발송</h3>
-        <p>'발송' 메뉴를 통해 수신자를 선택하고 모의 악성메일을 발송할 수 있습니다.</p>
+        <h3>모의 위협메일 발송</h3>
+        <p>'발송' 메뉴를 통해 수신자를 선택하고<br>모의 위협메일을 발송할 수 있습니다.</p>
       </div>
       
       <div class="info-card">
         <div class="info-icon">📈</div>
         <h3>결과 확인</h3>
-        <p>'결과확인' 메뉴를 통해 부서별 악성메일 보안대응 결과를 확인할 수 있습니다.</p>
+        <p>'결과확인' 메뉴를 통해<br>부서별 위협메일 보안대응 결과를<br>확인할 수 있습니다.</p>
       </div>
       
       <div class="info-card">
         <div class="info-icon">🛡️</div>
         <h3>보안 강화</h3>
-        <p>모의 훈련을 통해 조직의 보안 인식을 높이고 실제 공격에 대비할 수 있습니다.</p>
+        <p>모의 훈련을 통해<br>조직의 보안 인식을 높이고<br>실제 공격에 대비할 수 있습니다.</p>
       </div>
     </div>
   </div>
