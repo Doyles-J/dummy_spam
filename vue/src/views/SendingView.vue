@@ -71,7 +71,7 @@
       <div class="card">
         <div class="card-header">
           <div class="section-icon">👥</div>
-          <h3 class="section-title">사원명단</h3>
+          <h3 class="section-title">사원 명단</h3>
         </div>
         <div class="card-controls">
           <select
