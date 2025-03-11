@@ -118,18 +118,11 @@ public class DrillService {
                     : 0.0;
                 
                 rating.setDeptOpenRatio(openRatio);
-                
-                // 등급 계산
-                String deptRating;
-                if (openRatio <= 5) deptRating = "Green";
-                else if (openRatio <= 20) deptRating = "Yellow";
-                else deptRating = "Red";
-                
-                rating.setDeptRating(deptRating);
+                rating.setDeptRating(calculateSecurityRating(openRatio));
                 
                 DepartmentRating savedRating = departmentRatingRepository.save(rating);
                 log.info("부서 통계 저장 완료 - ID: {}, 부서: {}, 클릭률: {}%, 등급: {}", 
-                    savedRating.getId(), entry.getKey(), openRatio, deptRating);
+                    savedRating.getId(), entry.getKey(), openRatio, rating.getDeptRating());
             }
         } catch (Exception e) {
             log.error("통계 저장 중 오류 발생", e);

@@ -89,14 +89,26 @@ export default {
           this.departmentStats = [];
           this.renderMessage("해당 훈련에 대한 부서별 통계가 없습니다.");
         } else {
-          this.departmentStats = response.data.map((stat) => ({
-            deptId: stat.deptId,
-            deptName: stat.deptName,
-            totalEmployees: stat.totalEmployees || 0,
-            clickedCount: stat.clickedCount || 0,
-            openRatio: stat.openRatio || 0,
-            rating: stat.rating || "N/A",
-          }));
+          this.departmentStats = response.data.map((stat) => {
+            const clickRatio = stat.totalEmployees ? (stat.clickedCount / stat.totalEmployees * 100) : 0;
+            
+            // 클릭률에 따른 보안등급 계산
+            let rating;
+            if (clickRatio < 10) rating = 'A';
+            else if (clickRatio < 20) rating = 'B';
+            else if (clickRatio < 30) rating = 'C';
+            else if (clickRatio < 50) rating = 'D';
+            else rating = 'F';
+
+            return {
+              deptId: stat.deptId,
+              deptName: stat.deptName,
+              totalEmployees: stat.totalEmployees || 0,
+              clickedCount: stat.clickedCount || 0,
+              openRatio: clickRatio,
+              rating: rating,  // 계산된 등급 사용
+            };
+          });
 
           if (this.departmentStats.length > 0) {
             await this.$nextTick();
