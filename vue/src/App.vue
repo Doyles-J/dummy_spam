@@ -130,6 +130,7 @@ import { RouterLink, RouterView } from 'vue-router'
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
+  min-height: 680px;
   padding: 1.5rem;
 }
 
