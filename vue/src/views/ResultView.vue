@@ -386,6 +386,7 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
+  min-height: 585px;
 }
 
 .page-header {

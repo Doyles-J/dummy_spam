@@ -47,6 +47,7 @@ import { RouterLink, RouterView } from 'vue-router'
   z-index: 1000;
   background-color: #1e2639;
   color: white;
+  margin-bottom: 0;
 }
 
 .footer-container {
@@ -130,7 +131,6 @@ import { RouterLink, RouterView } from 'vue-router'
 .main-content {
   max-width: 1200px;
   margin: 0 auto;
-  min-height: 680px;
   padding: 1.5rem;
 }
 
