@@ -1,233 +1,223 @@
 <template>
-  <div class="container mx-auto p-4 max-w-6xl">
-    <h1 class="text-2xl font-bold text-center mb-6">
-      모의 악성메일 발송 시스템
-    </h1>
+  <div class="sending-container">
+    <div class="page-header">
+      <h1 class="page-title">모의 악성메일 발송 시스템</h1>
+      <p class="page-description">보안 인식 향상을 위한 모의 악성메일을 발송하세요</p>
+    </div>
 
-    <div v-if="showResults" class="bg-white rounded-lg border shadow-sm">
-      <div class="flex flex-col space-y-1.5 p-6 border-b">
-        <h3 class="font-semibold text-lg">발송 결과</h3>
+    <div v-if="showResults" class="card results-card">
+      <div class="card-header">
+        <div class="section-icon">✅</div>
+        <h3 class="section-title">발송 결과</h3>
       </div>
-      <div class="p-6">
-        <div class="space-y-4">
-          <div class="p-4 border rounded-md bg-gray-100">
-            <h3 class="font-medium mb-2">발송 완료</h3>
-            <p>
+      <div class="card-body">
+        <div class="success-message">
+          <div class="success-icon">✓</div>
+          <div class="success-content">
+            <h3 class="success-title">발송 완료</h3>
+            <p class="success-description">
               총 {{ recipients.length }}명의 사용자에게 모의 악성메일이
               발송되었습니다!
             </p>
           </div>
-
-          <div class="space-y-2">
-            <h3 class="font-medium">수신자 목록:</h3>
-            <ul class="space-y-1">
-              <li
-                v-for="recipient in recipients"
-                :key="recipient.id"
-                class="flex items-center gap-2"
-              >
-                <span class="text-green-500">✓</span>
-                <span>{{ recipient.name }}</span>
-                <span class="text-gray-500">({{ recipient.email }})</span>
-                <span class="text-sm text-gray-500 ml-2">{{
-                  recipient.department
-                }}</span>
-              </li>
-            </ul>
-          </div>
-
-          <button
-            @click="resetSystem"
-            class="w-full bg-gray-900 text-white rounded-md py-2 px-4 hover:bg-gray-800"
-          >
-            시스템 초기화
-          </button>
         </div>
+
+        <div class="recipients-list">
+          <h3 class="recipients-title">수신자 목록:</h3>
+          <ul class="recipients-items">
+            <li
+              v-for="recipient in recipients"
+              :key="recipient.id"
+              class="recipient-item"
+            >
+              <span class="success-check">✓</span>
+              <span class="recipient-name">{{ recipient.name }}</span>
+              <span class="recipient-email">({{ recipient.email }})</span>
+              <span class="recipient-dept">{{ recipient.department }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <button
+          @click="resetSystem"
+          class="btn btn-primary btn-full"
+        >
+          시스템 초기화
+        </button>
       </div>
     </div>
 
-    <div v-else class="grid grid-cols-1 md:grid-cols-7 gap-4">
+    <div v-else class="grid-layout">
       <!-- Employee List -->
-      <div class="md:col-span-3 bg-white rounded-lg border shadow-sm">
-        <div class="flex flex-col space-y-1.5 p-6 border-b">
-          <h3 class="font-semibold text-lg">사원명단</h3>
-          <!-- 부서 선택 및 전체 선택 컨트롤 추가 -->
-          <div class="flex items-center justify-between mt-2">
-            <select
-              v-model="selectedDepartment"
-              class="border rounded-md px-2 py-1 text-sm"
+      <div class="card">
+        <div class="card-header">
+          <div class="section-icon">👥</div>
+          <h3 class="section-title">사원명단</h3>
+        </div>
+        <div class="card-controls">
+          <select
+            v-model="selectedDepartment"
+            class="select-control"
+          >
+            <option value="all">전체 부서</option>
+            <option
+              v-for="dept in departmentList"
+              :key="dept"
+              :value="dept.replace('부서 ', '')"
             >
-              <option value="all">전체 부서</option>
-              <option
-                v-for="dept in departmentList"
-                :key="dept"
-                :value="dept.replace('부서 ', '')"
-              >
-                {{ dept }}
-              </option>
-            </select>
+              {{ dept }}
+            </option>
+          </select>
 
-            <div class="flex gap-2">
-              <button
-                @click="selectAllInDepartment"
-                class="text-sm px-2 py-1 border rounded-md hover:bg-gray-100"
-              >
-                전체 선택
-              </button>
-              <button
-                @click="unselectAll"
-                class="text-sm px-2 py-1 border rounded-md hover:bg-gray-100"
-              >
-                선택 해제
-              </button>
-            </div>
+          <div class="button-group">
+            <button
+              @click="selectAllInDepartment"
+              class="btn btn-secondary btn-sm"
+            >
+              전체 선택
+            </button>
+            <button
+              @click="unselectAll"
+              class="btn btn-secondary btn-sm"
+            >
+              선택 해제
+            </button>
           </div>
         </div>
 
-        <div class="p-6">
-          <div class="h-[400px] overflow-auto pr-4">
-            <div class="space-y-2">
-              <div
-                v-for="employee in filteredEmployees"
-                :key="employee.id"
-                :class="[
-                  'flex items-center space-x-2 p-2 rounded-md',
-                  selectedEmployees.includes(employee.id) ? 'bg-gray-100' : '',
-                ]"
-              >
-                <div class="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    :id="`employee-${employee.id}`"
-                    :checked="selectedEmployees.includes(employee.id)"
-                    @change="toggleEmployeeSelection(employee.id)"
-                    class="h-4 w-4"
-                  />
-                  <div class="grid gap-1">
-                    <label
-                      :for="`employee-${employee.id}`"
-                      class="font-medium cursor-pointer"
-                    >
-                      {{ employee.name }}
-                    </label>
-                    <div
-                      class="text-sm text-gray-500 flex flex-col sm:flex-row sm:gap-2"
-                    >
-                      <span>{{ employee.email }}</span>
-                      <span>{{ employee.department }}</span>
-                    </div>
+        <div class="card-body">
+          <div class="list-container">
+            <div
+              v-for="employee in filteredEmployees"
+              :key="employee.id"
+              :class="[
+                'list-item',
+                selectedEmployees.includes(employee.id) ? 'list-item-selected' : '',
+              ]"
+            >
+              <div class="list-item-content">
+                <input
+                  type="checkbox"
+                  :id="`employee-${employee.id}`"
+                  :checked="selectedEmployees.includes(employee.id)"
+                  @change="toggleEmployeeSelection(employee.id)"
+                  class="checkbox"
+                />
+                <div class="list-item-details">
+                  <label
+                    :for="`employee-${employee.id}`"
+                    class="list-item-name"
+                  >
+                    {{ employee.name }}
+                  </label>
+                  <div class="list-item-meta">
+                    <span class="list-item-email">{{ employee.email }}</span>
+                    <span class="list-item-dept">{{ employee.department }}</span>
                   </div>
                 </div>
               </div>
-              <div
-                v-if="employees.length === 0"
-                class="text-center py-4 text-gray-500"
-              >
-                {{
-                  selectedDepartment === "all"
-                    ? "모든 사원이 수신자 명단에 추가되었습니다."
-                    : "선택한 부서에 사원이 없습니다."
-                }}
-              </div>
+            </div>
+            <div
+              v-if="employees.length === 0"
+              class="empty-list"
+            >
+              {{
+                selectedDepartment === "all"
+                  ? "모든 사원이 수신자 명단에 추가되었습니다."
+                  : "선택한 부서에 사원이 없습니다."
+              }}
             </div>
           </div>
         </div>
       </div>
 
       <!-- Arrows -->
-      <div
-        class="flex md:flex-col items-center justify-center gap-4 md:col-span-1"
-      >
+      <div class="transfer-controls">
         <button
           @click="addRecipients"
           :disabled="selectedEmployees.length === 0"
-          class="border rounded-md p-2 hover:bg-gray-100 disabled:opacity-50"
-          :class="{ 'cursor-not-allowed': selectedEmployees.length === 0 }"
+          class="transfer-button"
+          :class="{ 'disabled': selectedEmployees.length === 0 }"
         >
-          <span class="block transform rotate-0">→</span>
+          <span class="transfer-icon">→</span>
           <span class="sr-only">수신자 추가</span>
         </button>
         <button
           @click="removeRecipients"
           :disabled="selectedRecipients.length === 0"
-          class="border rounded-md p-2 hover:bg-gray-100 disabled:opacity-50"
-          :class="{ 'cursor-not-allowed': selectedRecipients.length === 0 }"
+          class="transfer-button"
+          :class="{ 'disabled': selectedRecipients.length === 0 }"
         >
-          <span class="block transform rotate-0">←</span>
+          <span class="transfer-icon">←</span>
           <span class="sr-only">수신자 제거</span>
         </button>
       </div>
 
       <!-- Recipients List -->
-      <div class="md:col-span-3 bg-white rounded-lg border shadow-sm">
-        <div class="flex flex-col space-y-1.5 p-6 border-b">
-          <h3 class="font-semibold text-lg">메일 수신자 명단</h3>
+      <div class="card">
+        <div class="card-header">
+          <div class="section-icon">📧</div>
+          <h3 class="section-title">메일 수신자 명단</h3>
         </div>
-        <div class="p-6">
-          <div class="h-[400px] overflow-auto pr-4">
-            <div class="space-y-2">
-              <div
-                v-for="recipient in recipients"
-                :key="recipient.id"
-                :class="[
-                  'flex items-center space-x-2 p-2 rounded-md',
-                  selectedRecipients.includes(recipient.id)
-                    ? 'bg-gray-100'
-                    : '',
-                ]"
-              >
-                <div class="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    :id="`recipient-${recipient.id}`"
-                    :checked="selectedRecipients.includes(recipient.id)"
-                    @change="toggleRecipientSelection(recipient.id)"
-                    class="h-4 w-4"
-                  />
-                  <div class="grid gap-1">
-                    <label
-                      :for="`recipient-${recipient.id}`"
-                      class="font-medium cursor-pointer"
-                    >
-                      {{ recipient.name }}
-                    </label>
-                    <div
-                      class="text-sm text-gray-500 flex flex-col sm:flex-row sm:gap-2"
-                    >
-                      <span>{{ recipient.email }}</span>
-                      <span>{{ recipient.department }}</span>
-                    </div>
+        <div class="card-body">
+          <div class="list-container">
+            <div
+              v-for="recipient in recipients"
+              :key="recipient.id"
+              :class="[
+                'list-item',
+                selectedRecipients.includes(recipient.id) ? 'list-item-selected' : '',
+              ]"
+            >
+              <div class="list-item-content">
+                <input
+                  type="checkbox"
+                  :id="`recipient-${recipient.id}`"
+                  :checked="selectedRecipients.includes(recipient.id)"
+                  @change="toggleRecipientSelection(recipient.id)"
+                  class="checkbox"
+                />
+                <div class="list-item-details">
+                  <label
+                    :for="`recipient-${recipient.id}`"
+                    class="list-item-name"
+                  >
+                    {{ recipient.name }}
+                  </label>
+                  <div class="list-item-meta">
+                    <span class="list-item-email">{{ recipient.email }}</span>
+                    <span class="list-item-dept">{{ recipient.department }}</span>
                   </div>
                 </div>
               </div>
-              <div
-                v-if="recipients.length === 0"
-                class="text-center py-4 text-gray-500"
-              >
-                수신자 명단이 비어 있습니다.
-              </div>
+            </div>
+            <div
+              v-if="recipients.length === 0"
+              class="empty-list"
+            >
+              수신자 명단이 비어 있습니다.
             </div>
           </div>
         </div>
       </div>
 
       <!-- Action Buttons -->
-      <div class="md:col-span-7 flex justify-end gap-4 mt-4">
+      <div class="action-buttons">
         <button
           @click="resetRecipients"
           :disabled="recipients.length === 0"
-          class="border rounded-md py-2 px-4 hover:bg-gray-100 disabled:opacity-50"
-          :class="{ 'cursor-not-allowed': recipients.length === 0 }"
+          class="btn btn-secondary"
+          :class="{ 'disabled': recipients.length === 0 }"
         >
           초기화
         </button>
         <button
           @click="handleSendEmail"
           :disabled="recipients.length === 0"
-          class="bg-gray-900 text-white rounded-md py-2 px-4 hover:bg-gray-800 disabled:opacity-50 flex items-center"
-          :class="{ 'cursor-not-allowed': recipients.length === 0 }"
+          class="btn btn-primary"
+          :class="{ 'disabled': recipients.length === 0 }"
         >
-          <span class="mr-2">📤</span>
+          <span class="btn-icon">📤</span>
           발송
         </button>
       </div>
@@ -410,22 +400,384 @@ export default {
 </script>
 
 <style scoped>
-/* 스크롤바 스타일링 (선택사항) */
-.overflow-y-auto {
-  scrollbar-width: thin;
-  scrollbar-color: #cbd5e0 #edf2f7;
+.sending-container {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar {
-  width: 6px;
+.page-header {
+  margin-bottom: 1rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar-track {
-  background: #edf2f7;
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #1e2639;
+  margin-bottom: 0.5rem;
 }
 
-.overflow-y-auto::-webkit-scrollbar-thumb {
-  background-color: #cbd5e0;
-  border-radius: 3px;
+.page-description {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.grid-layout {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 1rem;
+}
+
+.card {
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  display: flex;
+  flex-direction: column;
+}
+
+.results-card {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.section-icon {
+  font-size: 1.25rem;
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e2639;
+}
+
+.card-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+}
+
+.select-control {
+  padding: 0.5rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  font-size: 0.875rem;
+  color: #1f2937;
+  min-width: 150px;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.card-body {
+  padding: 1rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.list-container {
+  height: 400px;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+}
+
+.list-item {
+  padding: 0.75rem;
+  border-radius: 0.375rem;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.list-item:hover {
+  background-color: #f9fafb;
+}
+
+.list-item-selected {
+  background-color: #f3f4f6;
+}
+
+.list-item-content {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.checkbox {
+  width: 1rem;
+  height: 1rem;
+  border-radius: 0.25rem;
+  border: 1px solid #d1d5db;
+  margin-top: 0.25rem;
+}
+
+.list-item-details {
+  flex: 1;
+}
+
+.list-item-name {
+  font-weight: 600;
+  color: #1f2937;
+  display: block;
+  margin-bottom: 0.25rem;
+  cursor: pointer;
+}
+
+.list-item-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.list-item-email {
+  word-break: break-all;
+}
+
+.list-item-dept {
+  color: #4b5563;
+}
+
+.empty-list {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #6b7280;
+  text-align: center;
+  padding: 2rem;
+}
+
+.transfer-controls {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1rem 0;
+}
+
+.transfer-button {
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #1f2937;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.transfer-button:hover:not(.disabled) {
+  background-color: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.transfer-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.action-buttons {
+  grid-column: span 3;
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.625rem 1.25rem;
+  font-weight: 500;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.btn-sm {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+}
+
+.btn-primary {
+  background-color: #1e2639;
+  color: white;
+}
+
+.btn-primary:hover:not(.disabled) {
+  background-color: #2d3748;
+}
+
+.btn-secondary {
+  background-color: white;
+  color: #1f2937;
+  border: 1px solid #d1d5db;
+}
+
+.btn-secondary:hover:not(.disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn-icon {
+  margin-right: 0.5rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+/* Success Results Styling */
+.success-message {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  background-color: #f0fdf4;
+  border: 1px solid #dcfce7;
+  border-radius: 0.5rem;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background-color: #22c55e;
+  color: white;
+  border-radius: 50%;
+  font-size: 1.25rem;
+  font-weight: bold;
+}
+
+.success-content {
+  flex: 1;
+}
+
+.success-title {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 0.25rem;
+}
+
+.success-description {
+  color: #166534;
+}
+
+.recipients-list {
+  margin-bottom: 1.5rem;
+}
+
+.recipients-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.75rem;
+}
+
+.recipients-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 0.375rem;
+}
+
+.recipient-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.recipient-item:last-child {
+  border-bottom: none;
+}
+
+.success-check {
+  color: #22c55e;
+  margin-right: 0.5rem;
+  font-weight: bold;
+}
+
+.recipient-name {
+  font-weight: 500;
+  color: #1f2937;
+  margin-right: 0.5rem;
+}
+
+.recipient-email {
+  color: #6b7280;
+  margin-right: 0.5rem;
+}
+
+.recipient-dept {
+  color: #4b5563;
+  margin-left: auto;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 768px) {
+  .grid-layout {
+    grid-template-columns: 1fr;
+  }
+  
+  .transfer-controls {
+    flex-direction: row;
+    justify-content: center;
+    padding: 0.5rem 0;
+  }
+  
+  .action-buttons {
+    grid-column: 1;
+  }
+  
+  .list-container {
+    height: 300px;
+  }
 }
 </style>
+

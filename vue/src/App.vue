@@ -3,63 +3,118 @@ import { RouterLink, RouterView } from 'vue-router'
 </script>
 
 <template>
-  <header>
-    <nav class="main-nav">
-      <RouterLink to="/" class="nav-item">메인페이지</RouterLink>
-      <RouterLink to="/sending" class="nav-item">발송</RouterLink>
-      <RouterLink to="/result" class="nav-item">결과확인</RouterLink>
-    </nav>
+  <header class="header">
+    <div class="header-container">
+      <div class="logo">
+        <img src="/logo.png" alt="Logo" class="logo-image" />
+        <span class="logo-text">Secure 지능형위협메일차단</span>
+      </div>
+      <nav class="main-nav">
+        <RouterLink to="/" class="nav-item">메인페이지</RouterLink>
+        <RouterLink to="/sending" class="nav-item">발송</RouterLink>
+        <RouterLink to="/result" class="nav-item">결과확인</RouterLink>
+      </nav>
+    </div>
   </header>
 
-  <RouterView />
+  <main class="main-content">
+    <RouterView />
+  </main>
 </template>
 
 <style scoped>
-header {
+.header {
   width: 100%;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
   position: sticky;
   top: 0;
   z-index: 100;
-  background-color: white;
+  background-color: #1e2639;
+  color: white;
+}
+
+.header-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logo-image {
+  height: 32px;
+}
+
+.logo-text {
+  font-size: 1.2rem;
+  font-weight: 600;
 }
 
 .main-nav {
   display: flex;
-  justify-content: center;
-  width: 100%;
-  background-color: #f8f9fa;
-  padding: 0;
-  margin: 0;
+  gap: 0.5rem;
 }
 
 .nav-item {
-  flex: 1;
-  text-align: center;
-  padding: 1rem 0;
-  color: #495057;
+  padding: 0.75rem 1.25rem;
+  color: rgba(255, 255, 255, 0.8);
   text-decoration: none;
   font-weight: 500;
-  font-size: 1.1rem;
+  font-size: 1rem;
   transition: all 0.3s ease;
-  border-bottom: 3px solid transparent;
+  border-radius: 4px;
 }
 
 .nav-item:hover {
-  background-color: #e9ecef;
-  color: #212529;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
 }
 
 .router-link-exact-active {
-  color: #3f51b5 !important;
-  border-bottom: 3px solid #3f51b5;
-  background-color: rgba(63, 81, 181, 0.05);
+  color: white !important;
+  background-color: rgba(255, 255, 255, 0.15);
+  position: relative;
+}
+
+.router-link-exact-active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: #ff3b30;
+}
+
+.main-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
 }
 
 @media (max-width: 768px) {
+  .header-container {
+    flex-direction: column;
+    padding: 0.5rem;
+  }
+  
+  .main-nav {
+    width: 100%;
+    justify-content: center;
+    margin-top: 0.5rem;
+  }
+  
   .nav-item {
     font-size: 0.9rem;
-    padding: 0.8rem 0;
+    padding: 0.6rem 1rem;
   }
 }
 </style>
+
