@@ -6,11 +6,15 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import com.kt.mail.entity.Employee;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 @Entity
 @Table(name = "department")
 @Getter
 @Setter
+@NoArgsConstructor
+@AllArgsConstructor
 public class Department {
     @Id
     @Column(name = "dept_id")

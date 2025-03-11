@@ -82,7 +82,7 @@
             <option
               v-for="dept in departmentList"
               :key="dept"
-              :value="dept.replace('부서 ', '')"
+              :value="dept"
             >
               {{ dept }}
             </option>
@@ -270,7 +270,7 @@ export default {
         return this.employees;
       }
       return this.employees.filter(
-        (emp) => emp.department === `부서 ${this.selectedDepartment}`
+        (emp) => emp.department === this.selectedDepartment
       );
     },
     // 부서 목록 생성
@@ -294,7 +294,7 @@ export default {
               id: emp.empId || emp.id,
               name: emp.empName || emp.name,
               email: emp.empMail || emp.email,
-              department: `부서 ${emp.deptId || emp.department}`,
+              department: emp.deptName || emp.department,
               rank: emp.empRank || emp.rank,
             };
           });

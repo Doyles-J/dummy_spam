@@ -233,7 +233,7 @@ public class DrillService {
                 
                 // getDepartment() 대신 getDeptId()와 부서명 생성 사용
                 Integer deptId = recipient.getDeptId();
-                String deptName = "부서 " + deptId;
+                String deptName = recipient.getDeptName();
                 
                 deptSummaryMap.computeIfAbsent(deptId,
                     k -> new DepartmentSummary(deptName)).addRecipient();
