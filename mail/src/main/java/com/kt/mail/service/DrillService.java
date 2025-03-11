@@ -203,38 +203,89 @@ public class DrillService {
         }
     }
 
+    @Transactional
     public List<Map<String, Object>> getDepartmentRatings(Integer drillId) {
-        log.info("부서별 훈련 통계 조회 시작 - drillId: {}", drillId);
-        
         try {
-            List<DepartmentRating> ratings = departmentRatingRepository.findByDrillId(drillId);
+            log.info("부서별 통계 조회 시작 - drillId: {}", drillId);
             
-            if (ratings.isEmpty()) {
-                log.warn("해당 훈련에 대한 부서별 통계가 없습니다 - drillId: {}", drillId);
-                // 통계가 없으면 자동으로 계산
-                updateDepartmentRatings(drillId);
-                ratings = departmentRatingRepository.findByDrillId(drillId);
+            // 1. 훈련 정보 조회
+            DrillInfo drillInfo = drillInfoRepository.findById(Long.valueOf(drillId))
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 훈련입니다: " + drillId));
+            log.info("훈련 정보 조회 완료 - drillId: {}, 날짜: {}", drillId, drillInfo.getDrillDate());
+
+            // 2. 메일 컨텐츠 조회
+            List<DrillMailContent> contents = mailContentRepository.findByDrillInfo_DrillId(drillId);
+            log.info("메일 컨텐츠 조회 완료 - 건수: {}", contents.size());
+
+            // 3. 부서별 대상자 수 집계
+            Map<Integer, Integer> deptTotalMap = new HashMap<>();
+            for (DrillMailContent content : contents) {
+                try {
+                    Recipient recipient = recipientRepository.findById(content.getEmpId())
+                        .orElseThrow(() -> new RuntimeException("직원 정보를 찾을 수 없습니다: " + content.getEmpId()));
+                    
+                    deptTotalMap.merge(recipient.getDeptId(), 1, Integer::sum);
+                    log.debug("대상자 집계 - empId: {}, deptId: {}", content.getEmpId(), recipient.getDeptId());
+                } catch (Exception e) {
+                    log.error("대상자 정보 조회 실패 - empId: {}", content.getEmpId(), e);
+                }
+            }
+            log.info("부서별 대상자 수 집계 완료 - 부서 수: {}, 상세: {}", deptTotalMap.size(), deptTotalMap);
+
+            // 4. 클릭 결과 조회
+            List<DrillResult> results = drillResultRepository.findByDrillInfo_DrillIdAndOpenYn(drillId, "Y");
+            log.info("클릭 결과 조회 완료 - 건수: {}", results.size());
+
+            // 5. 부서별 클릭 수 집계
+            Map<Integer, Integer> deptClickMap = new HashMap<>();
+            for (DrillResult result : results) {
+                try {
+                    Integer empId = Integer.valueOf(result.getEmpIdHash());
+                    Recipient recipient = recipientRepository.findById(empId)
+                        .orElseThrow(() -> new RuntimeException("직원 정보를 찾을 수 없습니다: " + empId));
+                    
+                    deptClickMap.merge(recipient.getDeptId(), 1, Integer::sum);
+                    log.debug("클릭 집계 - empId: {}, deptId: {}", empId, recipient.getDeptId());
+                } catch (Exception e) {
+                    log.error("클릭 직원 정보 조회 실패 - empIdHash: {}", result.getEmpIdHash(), e);
+                }
+            }
+            log.info("부서별 클릭 수 집계 완료 - 부서 수: {}, 상세: {}", deptClickMap.size(), deptClickMap);
+
+            // 6. 부서별 통계 생성
+            List<Map<String, Object>> stats = new ArrayList<>();
+            for (Map.Entry<Integer, Integer> entry : deptTotalMap.entrySet()) {
+                Integer deptId = entry.getKey();
+                Integer totalCount = entry.getValue();
+                Integer clickCount = deptClickMap.getOrDefault(deptId, 0);
+                
+                double openRatio = totalCount > 0 ? (clickCount * 100.0 / totalCount) : 0.0;
+                
+                Map<String, Object> stat = new HashMap<>();
+                stat.put("deptId", deptId);
+                stat.put("deptName", "부서 " + deptId); // 부서명이 있다면 해당 부서명 사용
+                stat.put("totalEmployees", totalCount);
+                stat.put("clickedCount", clickCount);
+                stat.put("openRatio", openRatio);
+                stat.put("rating", calculateSecurityRating(openRatio));
+                
+                stats.add(stat);
             }
             
-            return ratings.stream().map(rating -> {
-                Map<String, Object> stat = new HashMap<>();
-                Department dept = rating.getDepartment();
+            log.info("부서별 통계 생성 완료 - 부서 수: {}", stats.size());
+            return stats;
                 
-                stat.put("deptId", dept.getDeptId());
-                stat.put("deptName", dept.getDeptName() != null ? dept.getDeptName() : "부서 " + dept.getDeptId());
-                stat.put("totalEmployees", mailContentRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptId(
-                    drillId, dept.getDeptId()));
-                stat.put("clickedCount", drillResultRepository.countByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
-                    drillId, dept.getDeptId(), "Y"));
-                stat.put("openRatio", rating.getDeptOpenRatio());
-                stat.put("rating", rating.getDeptRating());
-                
-                return stat;
-            }).collect(Collectors.toList());
-            
         } catch (Exception e) {
-            log.error("통계 데이터 조회/계산 중 오류 발생 - drillId: {}", e);
-            throw new RuntimeException("부서별 통계 처리 중 오류가 발생했습니다", e);
+            log.error("부서별 통계 조회 중 오류 발생. drillId: {}", drillId, e);
+            throw new RuntimeException("부서별 통계 조회 실패", e);
         }
+    }
+
+    private String calculateSecurityRating(double openRatio) {
+        if (openRatio <= 20) return "A";
+        if (openRatio <= 40) return "B";
+        if (openRatio <= 60) return "C";
+        if (openRatio <= 80) return "D";
+        return "F";
     }
 } 

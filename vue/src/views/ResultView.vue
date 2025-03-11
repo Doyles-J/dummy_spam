@@ -328,7 +328,7 @@ export default {
               <td class="px-6 py-4 whitespace-nowrap">{{ stat.deptName }}</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ stat.totalEmployees }}명</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ stat.clickedCount }}명</td>
-              <td class="px-6 py-4 whitespace-nowrap">{{ stat.openRatio.toFixed(1) }}%</td>
+              <td class="px-6 py-4 whitespace-nowrap">{{ Number(stat.openRatio).toFixed(1) }}%</td>
               <td class="px-6 py-4 whitespace-nowrap">{{ stat.rating }}</td>
             </tr>
           </tbody>
