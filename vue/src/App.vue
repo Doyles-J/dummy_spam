@@ -20,6 +20,13 @@ import { RouterLink, RouterView } from 'vue-router'
   <main class="main-content">
     <RouterView />
   </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+        <span class="logo-text-footer">지능형 위협메일 모의훈련 v2025&nbsp;&nbsp;</span>
+        <img src="/logo.png" alt="Logo" class="logo-image-footer" />
+    </div>
+  </footer>
 </template>
 
 <style scoped>
@@ -31,6 +38,24 @@ import { RouterLink, RouterView } from 'vue-router'
   z-index: 100;
   background-color: #1e2639;
   color: white;
+}
+.footer {
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background-color: #1e2639;
+  color: white;
+}
+
+.footer-container {
+  display: flex;
+  align-items: right;
+  justify-content: right;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0.5rem 1rem;
 }
 
 .header-container {
@@ -52,8 +77,17 @@ import { RouterLink, RouterView } from 'vue-router'
   height: 32px;
 }
 
+.logo-image-footer {
+  height: 20px;
+}
+
 .logo-text {
   font-size: 1.2rem;
+  font-weight: 600;
+}
+
+.logo-text-footer {
+  font-size: 1.0rem;
   font-weight: 600;
 }
 
