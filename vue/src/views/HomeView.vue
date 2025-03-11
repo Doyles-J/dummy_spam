@@ -15,29 +15,8 @@ const employees = ref(null);
     <h1>모의 악성메일을 이용한 보안 점검 페이지입니다.</h1>
     <h2>'발송'을 누르시면 수신자를 선택해 메일을 발송할 수 있고</h2>
     <h2>'결과확인'을 누르시면 악성메일 보안대응 결과를 확인할 수 있습니다.</h2>
-    <h1>랜딩 페이지는 나중에 건드리는걸로</h1>
+    <h1>랜딩페이지는 나중에 건드리는걸로</h1>
   </div>
-  <!-- <table>
-    <thead>
-      <tr>
-        <th>ID</th>
-        <th>first name</th>
-        <th>last name</th>
-        <th>Manage</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr v-for="employee in employees" :key="employee.employeeId">
-        <td>{{ employee.employeeId }}</td>
-        <td>{{ employee.firstName }}</td>
-        <td>{{ employee.lastName }}</td>
-        <td>
-          <button @click="goModiry(employee.employeeId)">수정</button>
-          <button @click="deleteEmployee(employee.employeeId)">삭제</button>
-        </td>
-      </tr>
-    </tbody>
-  </table> -->
 </template>
 
 <style scoped>
