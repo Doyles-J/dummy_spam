@@ -307,8 +307,8 @@ public class DrillService {
     }
 
     private String calculateSecurityRating(double openRatio) {
-        if (openRatio <= 20) return "A";
-        if (openRatio <= 40) return "B";
+        if (openRatio <= 5) return "A";
+        if (openRatio <= 20) return "B";
         if (openRatio <= 60) return "C";
         if (openRatio <= 80) return "D";
         return "F";

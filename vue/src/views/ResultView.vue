@@ -94,10 +94,10 @@ export default {
             
             // 클릭률에 따른 보안등급 계산
             let rating;
-            if (clickRatio < 10) rating = 'A';
-            else if (clickRatio < 20) rating = 'B';
-            else if (clickRatio < 30) rating = 'C';
-            else if (clickRatio < 50) rating = 'D';
+            if (clickRatio <= 5) rating = 'A';
+            else if (clickRatio <= 20) rating = 'B';
+            else if (clickRatio <= 60) rating = 'C';
+            else if (clickRatio <= 80) rating = 'D';
             else rating = 'F';
 
             return {
@@ -193,15 +193,19 @@ export default {
                 data: data,
                 backgroundColor: function (context) {
                   const value = context.raw;
-                  if (value >= 50) return "rgba(239, 68, 68, 0.7)"; // 빨간색 (높음)
+                  if (value >= 80) return "rgba(73, 13, 13, 0.7)"; // #7f1d1d (높음)
+                  if (value >= 60) return "rgba(239, 68, 68, 0.7)"; // 빨간색 (약간높음)
                   if (value >= 20) return "rgba(234, 179, 8, 0.7)"; // 노란색 (중간)
+                  if (value >= 5) return "rgba(114, 155, 221, 0.7)"; // 하늘색#729bdd (약간낮음)
                   return "rgba(34, 197, 94, 0.7)"; // 초록색 (낮음)
                 },
                 borderColor: function (context) {
                   const value = context.raw;
-                  if (value >= 50) return "rgba(239, 68, 68, 1)"; // 진한 빨간색
-                  if (value >= 20) return "rgba(234, 179, 8, 1)"; // 진한 노란색
-                  return "rgba(34, 197, 94, 1)"; // 진한 초록색
+                  if (value >= 80) return "rgba(73, 13, 13, 1)"; // #7f1d1d (높음)
+                  if (value >= 60) return "rgba(239, 68, 68, 1)"; // 빨간색 (약간높음)
+                  if (value >= 20) return "rgba(234, 179, 8, 1)"; // 노란색 (중간)
+                  if (value >= 5) return "rgba(114, 155, 221, 1)"; // 하늘색#729bdd (약간낮음)
+                  return "rgba(34, 197, 94, 1)"; // 초록색 (낮음)
                 },
                 borderWidth: 1,
               },
@@ -476,7 +480,6 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  min-height: 585px;
 }
 
 .page-header {
@@ -755,7 +758,7 @@ export default {
 }
 
 .rating-B {
-  background-color: #3b82f6;
+  background-color: #729bdd;
   color: white;
 }
 
@@ -770,7 +773,7 @@ export default {
 }
 
 .rating-F {
-  background-color: #7f1d1d;
+  background-color: #490d0d;
   color: white;
 }
 
