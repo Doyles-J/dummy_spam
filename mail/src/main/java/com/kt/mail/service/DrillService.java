@@ -3,12 +3,14 @@ package com.kt.mail.service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.kt.mail.domain.*;
 import com.kt.mail.entity.*;
 
 import lombok.Getter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import org.slf4j.Logger;
@@ -34,6 +36,8 @@ public class DrillService {
     private DrillResultRepository resultRepository;
     @Autowired
     private DrillResultRepository drillResultRepository;
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     public DrillInfo createNewDrill() {
         DrillInfo drillInfo = new DrillInfo();
@@ -317,30 +321,141 @@ public class DrillService {
     public List<Map<String, Object>> getClickedEmployees(Integer drillId, Integer deptId) {
         log.info("클릭한 사용자 정보 조회 시작 - drillId: {}, deptId: {}", drillId, deptId);
         
-        // 클릭한 사용자 조회 (drill_result에서 open_yn='Y'인 사용자)
-        List<DrillResult> clickedResults = drillResultRepository.findByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
-            drillId, deptId, "Y");
-        
-        return clickedResults.stream().map(result -> {
-            Map<String, Object> empInfo = new HashMap<>();
-            Employee employee = result.getEmployee();
+        try {
+            // 먼저 drill_result 테이블에서 해당 drillId의 데이터가 있는지 확인
+            String checkQuery = "SELECT COUNT(*) FROM drill_result WHERE drill_id = ?";
+            int totalCount = jdbcTemplate.queryForObject(checkQuery, Integer.class, drillId);
+            log.info("drill_result 테이블의 총 레코드 수 (drill_id={}): {}", drillId, totalCount);
             
-            if (employee != null) {
-                empInfo.put("empId", employee.getEmpId());
-                empInfo.put("empName", employee.getEmpName());
-                empInfo.put("empMail", employee.getEmpMail());
-                empInfo.put("empRank", employee.getEmpRank());
-                empInfo.put("clickTime", result.getOpenDate());
-            } else {
-                // Employee가 null인 경우 기본값 설정
-                empInfo.put("empId", result.getEmpId());
-                empInfo.put("empName", "알 수 없음");
-                empInfo.put("empMail", "");
-                empInfo.put("empRank", "");
-                empInfo.put("clickTime", result.getOpenDate());
+            // open_yn='Y'인 레코드 수 확인
+            String openYnQuery = "SELECT COUNT(*) FROM drill_result WHERE drill_id = ? AND open_yn = 'Y'";
+            int openYnCount = jdbcTemplate.queryForObject(openYnQuery, Integer.class, drillId);
+            log.info("open_yn='Y'인 레코드 수: {}", openYnCount);
+            
+            // emp_id가 null이 아닌 레코드 수 확인
+            String empIdQuery = "SELECT COUNT(*) FROM drill_result WHERE drill_id = ? AND emp_id IS NOT NULL";
+            int empIdCount = jdbcTemplate.queryForObject(empIdQuery, Integer.class, drillId);
+            log.info("emp_id가 null이 아닌 레코드 수: {}", empIdCount);
+            
+            // 조인 전 employee 테이블에서 해당 부서의 직원 수 확인
+            String empQuery = "SELECT COUNT(*) FROM employee WHERE dept_id = ?";
+            int empCount = jdbcTemplate.queryForObject(empQuery, Integer.class, deptId);
+            log.info("부서 {}의 직원 수: {}", deptId, empCount);
+            
+            // 원래 쿼리 실행
+            String sql = "SELECT dr.emp_id, e.emp_name, e.emp_mail, e.emp_rank, dr.open_date " +
+                         "FROM drill_result dr " +
+                         "JOIN employee e ON dr.emp_id = e.emp_id " +
+                         "WHERE dr.drill_id = ? " +
+                         "AND e.dept_id = ? " +
+                         "AND dr.open_yn = 'Y'";
+            
+            log.info("실행할 SQL 쿼리: {}", sql);
+            log.info("파라미터: drillId={}, deptId={}", drillId, deptId);
+            
+            List<Map<String, Object>> results = new ArrayList<>();
+            
+            jdbcTemplate.query(sql, new Object[]{drillId, deptId}, (rs) -> {
+                Map<String, Object> empInfo = new HashMap<>();
+                empInfo.put("empId", rs.getInt("emp_id"));
+                empInfo.put("empName", rs.getString("emp_name"));
+                empInfo.put("empMail", rs.getString("emp_mail"));
+                empInfo.put("empRank", rs.getString("emp_rank"));
+                empInfo.put("clickTime", rs.getTimestamp("open_date"));
+                results.add(empInfo);
+            });
+            
+            log.info("SQL 쿼리로 조회된 결과 수: {}", results.size());
+            
+            // 결과가 없는 경우 대체 쿼리 시도
+            if (results.isEmpty() && openYnCount > 0) {
+                log.info("결과가 없어 대체 쿼리 시도");
+                
+                // emp_id_hash를 사용하여 조회 시도
+                String altSql = "SELECT dr.emp_id_hash, e.emp_name, e.emp_mail, e.emp_rank, dr.open_date " +
+                             "FROM drill_result dr " +
+                             "JOIN employee e ON CAST(dr.emp_id_hash AS INTEGER) = e.emp_id " +
+                             "WHERE dr.drill_id = ? " +
+                             "AND e.dept_id = ? " +
+                             "AND dr.open_yn = 'Y'";
+                
+                log.info("대체 SQL 쿼리: {}", altSql);
+                
+                jdbcTemplate.query(altSql, new Object[]{drillId, deptId}, (rs) -> {
+                    Map<String, Object> empInfo = new HashMap<>();
+                    empInfo.put("empId", rs.getString("emp_id_hash"));
+                    empInfo.put("empName", rs.getString("emp_name"));
+                    empInfo.put("empMail", rs.getString("emp_mail"));
+                    empInfo.put("empRank", rs.getString("emp_rank"));
+                    empInfo.put("clickTime", rs.getTimestamp("open_date"));
+                    results.add(empInfo);
+                });
+                
+                log.info("대체 SQL 쿼리로 조회된 결과 수: {}", results.size());
             }
             
-            return empInfo;
-        }).collect(Collectors.toList());
+            return results;
+        } catch (Exception e) {
+            log.error("클릭한 사용자 정보 조회 중 오류: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
+    }
+
+    public List<Map<String, Object>> getClickedEmployeesByDate(LocalDate date, Integer deptId) {
+        log.info("날짜별 클릭한 사용자 정보 조회 시작 - date: {}, deptId: {}", date, deptId);
+        
+        try {
+            // 해당 날짜의 시작과 끝 설정
+            LocalDateTime startOfDay = date.atStartOfDay();
+            LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+            
+            // 해당 날짜에 실시된 모든 훈련 ID 조회
+            String drillIdQuery = "SELECT drill_id FROM drill_info WHERE drill_date BETWEEN ? AND ?";
+            List<Integer> drillIds = jdbcTemplate.queryForList(drillIdQuery, Integer.class, 
+                                                             startOfDay, endOfDay);
+            
+            log.info("해당 날짜({})의 훈련 ID 목록: {}", date, drillIds);
+            
+            if (drillIds.isEmpty()) {
+                log.warn("해당 날짜에 실시된 훈련이 없습니다.");
+                return new ArrayList<>();
+            }
+            
+            // IN 절을 위한 문자열 생성
+            String drillIdList = drillIds.stream()
+                                        .map(String::valueOf)
+                                        .collect(Collectors.joining(","));
+            
+            // 해당 날짜의 모든 훈련에 대해 클릭한 사용자 정보 조회
+            String sql = "SELECT dr.emp_id, e.emp_name, e.emp_mail, e.emp_rank, dr.open_date, di.drill_date " +
+                         "FROM drill_result dr " +
+                         "JOIN employee e ON dr.emp_id = e.emp_id " +
+                         "JOIN drill_info di ON dr.drill_id = di.drill_id " +
+                         "WHERE dr.drill_id IN (" + drillIdList + ") " +
+                         "AND e.dept_id = ? " +
+                         "AND dr.open_yn = 'Y'";
+            
+            log.info("실행할 SQL 쿼리: {}", sql);
+            log.info("파라미터: deptId={}", deptId);
+            
+            List<Map<String, Object>> results = new ArrayList<>();
+            
+            jdbcTemplate.query(sql, new Object[]{deptId}, (rs) -> {
+                Map<String, Object> empInfo = new HashMap<>();
+                empInfo.put("empId", rs.getInt("emp_id"));
+                empInfo.put("empName", rs.getString("emp_name"));
+                empInfo.put("empMail", rs.getString("emp_mail"));
+                empInfo.put("empRank", rs.getString("emp_rank"));
+                empInfo.put("clickTime", rs.getTimestamp("open_date"));
+                empInfo.put("drillDate", rs.getTimestamp("drill_date"));
+                results.add(empInfo);
+            });
+            
+            log.info("SQL 쿼리로 조회된 결과 수: {}", results.size());
+            return results;
+        } catch (Exception e) {
+            log.error("날짜별 클릭한 사용자 정보 조회 중 오류: {}", e.getMessage(), e);
+            return new ArrayList<>();
+        }
     }
 } 

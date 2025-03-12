@@ -314,11 +314,17 @@ export default {
       this.clickedEmployees = [];
       
       try {
+        // 현재 선택된 날짜 사용
+        const date = this.selectedDate; // YYYY-MM-DD 형식
+        console.log(`조회할 날짜: ${date}, 부서: ${deptId}`);
+        
+        // 날짜 기반 API 호출
         const response = await axiosInst.get(
-          `/drill/${this.selectedDrillId}/clicked-employees?deptId=${deptId}`
+          `/drill/clicked-employees-by-date?date=${date}&deptId=${deptId}`
         );
         
         this.clickedEmployees = response.data;
+        console.log(`부서 ${deptId}의 클릭한 사용자 정보:`, response.data);
       } catch (error) {
         console.error("클릭한 사용자 정보 로드 실패:", error);
         alert("사용자 정보를 불러오는데 실패했습니다.");

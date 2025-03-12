@@ -22,6 +22,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/drill")
@@ -117,15 +118,20 @@ public class DrillController {
         return null; // Placeholder return, actual implementation needed
     }
 
-    @GetMapping("/{drillId}/clicked-employees")
-    public ResponseEntity<?> getClickedEmployees(
-        @PathVariable("drillId") Integer drillId, 
+    @GetMapping("/clicked-employees-by-date")
+    public ResponseEntity<?> getClickedEmployeesByDate(
+        @RequestParam("date") String dateStr, 
         @RequestParam("deptId") Integer deptId) {
         try {
-            List<Map<String, Object>> clickedEmployees = drillService.getClickedEmployees(drillId, deptId);
+            log.info("날짜별 클릭한 사용자 정보 조회 요청 - date: {}, deptId: {}", dateStr, deptId);
+            
+            // 날짜 형식 변환 (YYYY-MM-DD)
+            LocalDate date = LocalDate.parse(dateStr);
+            
+            List<Map<String, Object>> clickedEmployees = drillService.getClickedEmployeesByDate(date, deptId);
             return ResponseEntity.ok(clickedEmployees);
         } catch (Exception e) {
-            log.error("클릭한 사용자 정보 조회 실패. drillId: {}, deptId: {}", drillId, deptId, e);
+            log.error("날짜별 클릭한 사용자 정보 조회 실패. date: {}, deptId: {}", dateStr, deptId, e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(Map.of("message", "클릭한 사용자 정보 조회에 실패했습니다."));
         }
