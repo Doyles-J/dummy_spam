@@ -11,11 +11,13 @@ import com.kt.mail.service.DrillResultService;
 
 import java.net.URI;
 import java.time.LocalDateTime;
+import java.sql.Timestamp;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 @RestController
 @RequestMapping("/track")
@@ -26,6 +28,7 @@ public class TrackController {
     private final DrillResultRepository drillResultRepository;
     private final DrillService drillService;
     private final DrillResultService drillResultService;
+    private final JdbcTemplate jdbcTemplate;
     
     @GetMapping("/{drillId}/{empIdHash}")
     public ResponseEntity<String> trackEmailClick(
@@ -36,23 +39,34 @@ public class TrackController {
         try {
             log.info("훈련 링크 클릭 감지: drillId={}, empIdHash={}", drillId, empIdHash);
             
+            // empIdHash를 Integer로 변환 (이 부분이 중요)
+            Integer empId = null;
+            try {
+                empId = Integer.parseInt(empIdHash);
+                log.info("변환된 empId: {}", empId);
+            } catch (NumberFormatException e) {
+                log.error("empIdHash를 Integer로 변환할 수 없습니다: {}", empIdHash);
+            }
+            
             // 클릭 시간 기록
             LocalDateTime clickTime = LocalDateTime.now();
             
-            // IP 주소 기록 (프록시를 고려한 실제 IP 주소 획득)
+            // IP 주소 기록
             String ipAddress = extractIpAddress(request);
             
-            // 결과 저장
-            DrillResult result = new DrillResult();
-            result.setDrillId(drillId);
-            result.setEmpIdHash(empIdHash);
-            result.setClickTime(clickTime);
-            result.setIpAddress(ipAddress);
+            // 결과 저장 - 직접 SQL 쿼리 사용
+            String sql = "INSERT INTO drill_result (drill_id, emp_id, emp_id_hash, open_yn, open_date, ip_address) " +
+                         "VALUES (?, ?, ?, 'Y', ?, ?)";
             
-            drillResultRepository.save(result);
+            jdbcTemplate.update(sql, 
+                drillId, 
+                empId,  // 변환된 empId 사용
+                empIdHash, 
+                Timestamp.valueOf(clickTime), 
+                ipAddress);
             
-            log.info("훈련 클릭 기록 완료: drillId={}, empIdHash={}, ip={}", 
-                drillId, empIdHash, ipAddress);
+            log.info("훈련 클릭 기록 완료: drillId={}, empId={}, empIdHash={}, ip={}", 
+                drillId, empId, empIdHash, ipAddress);
             
             // 부서별 통계 업데이트
             try {

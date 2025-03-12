@@ -70,8 +70,8 @@ public class DrillMailContent {
         if (this.empId == null) {
             throw new IllegalArgumentException("추적 링크 생성을 위해서는 사원 ID가 필요합니다.");
         }
-        this.mailLink = String.format("http://localhost:8080/track/%d/%s", 
-            drillId, this.empId.hashCode());
+        this.mailLink = String.format("http://localhost:8080/track/%d/%d", 
+            drillId, this.empId);
     }
 
     public Integer getDeptId() {
