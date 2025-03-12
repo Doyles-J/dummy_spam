@@ -14,6 +14,10 @@ export default {
       selectedDate: null,
       chartInstance: null,
       chartAnimationInProgress: false,
+      showModal: false,
+      clickedEmployees: [],
+      loadingEmployees: false,
+      selectedDeptId: null,
     };
   },
 
@@ -302,6 +306,32 @@ export default {
       }
       return null;
     },
+
+    async showClickedEmployees(deptId) {
+      this.selectedDeptId = deptId;
+      this.showModal = true;
+      this.loadingEmployees = true;
+      this.clickedEmployees = [];
+      
+      try {
+        const response = await axiosInst.get(
+          `/drill/${this.selectedDrillId}/clicked-employees?deptId=${deptId}`
+        );
+        
+        this.clickedEmployees = response.data;
+      } catch (error) {
+        console.error("클릭한 사용자 정보 로드 실패:", error);
+        alert("사용자 정보를 불러오는데 실패했습니다.");
+      } finally {
+        this.loadingEmployees = false;
+      }
+    },
+    
+    closeModal() {
+      this.showModal = false;
+      this.clickedEmployees = [];
+      this.selectedDeptId = null;
+    }
   },
 
   computed: {
@@ -448,7 +478,12 @@ export default {
               <tr v-for="stat in departmentStats" :key="stat.deptId">
                 <td>{{ stat.deptName }}</td>
                 <td>{{ stat.totalEmployees }}명</td>
-                <td>{{ stat.clickedCount }}명</td>
+                <td>
+                  <div class="clickable-cell" @click="showClickedEmployees(stat.deptId)">
+                    {{ stat.clickedCount }}명
+                    <span v-if="stat.clickedCount > 0" class="view-details">👁️</span>
+                  </div>
+                </td>
                 <td>
                   <div class="ratio-display">
                     <div
@@ -469,6 +504,34 @@ export default {
               </tr>
             </tbody>
           </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 클릭한 사용자 목록 모달 -->
+    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+      <div class="modal-content" @click.stop>
+        <div class="modal-header">
+          <h3>클릭한 사용자 목록</h3>
+          <button class="close-button" @click="closeModal">×</button>
+        </div>
+        <div class="modal-body">
+          <div v-if="loadingEmployees" class="loading-spinner-container">
+            <div class="loading-spinner"></div>
+            <p>사용자 정보 로딩 중...</p>
+          </div>
+          <div v-else-if="clickedEmployees.length === 0" class="empty-list">
+            클릭한 사용자가 없습니다.
+          </div>
+          <ul v-else class="employee-list">
+            <li v-for="emp in clickedEmployees" :key="emp.empId" class="employee-item">
+              <div class="employee-name">{{ emp.empName }}</div>
+              <div class="employee-info">
+                <span class="employee-email">{{ emp.empMail }}</span>
+                <span class="employee-rank">{{ emp.empRank }}</span>
+              </div>
+            </li>
+          </ul>
         </div>
       </div>
     </div>
@@ -786,5 +849,126 @@ export default {
   .results-table td {
     padding: 0.5rem;
   }
+}
+
+.clickable-cell {
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.clickable-cell:hover {
+  color: #3b82f6;
+}
+
+.view-details {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* 모달 스타일 */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+}
+
+.modal-content {
+  background-color: white;
+  border-radius: 0.5rem;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.modal-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e2639;
+  margin: 0;
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: #6b7280;
+  cursor: pointer;
+}
+
+.modal-body {
+  padding: 1rem;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.loading-spinner-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 0;
+}
+
+.employee-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.employee-item {
+  padding: 0.75rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.employee-item:last-child {
+  border-bottom: none;
+}
+
+.employee-name {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 0.25rem;
+}
+
+.employee-info {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+.employee-email {
+  color: #4b5563;
+}
+
+.employee-rank {
+  color: #6b7280;
+}
+
+.empty-list {
+  text-align: center;
+  padding: 2rem 0;
+  color: #6b7280;
 }
 </style>

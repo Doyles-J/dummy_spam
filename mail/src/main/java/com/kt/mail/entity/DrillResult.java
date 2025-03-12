@@ -30,7 +30,11 @@ public class DrillResult {
     @JoinColumn(name = "drill_id")
     private DrillInfo drillInfo;
     
-    @Column(name = "emp_id")
+    @ManyToOne
+    @JoinColumn(name = "emp_id")
+    private Employee employee;
+    
+    @Column(name = "emp_id", insertable = false, updatable = false)
     private Integer empId;
 
     @Column(name = "emp_id_hash")

@@ -313,4 +313,34 @@ public class DrillService {
         if (openRatio <= 80) return "D";
         return "F";
     }
+
+    public List<Map<String, Object>> getClickedEmployees(Integer drillId, Integer deptId) {
+        log.info("클릭한 사용자 정보 조회 시작 - drillId: {}, deptId: {}", drillId, deptId);
+        
+        // 클릭한 사용자 조회 (drill_result에서 open_yn='Y'인 사용자)
+        List<DrillResult> clickedResults = drillResultRepository.findByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
+            drillId, deptId, "Y");
+        
+        return clickedResults.stream().map(result -> {
+            Map<String, Object> empInfo = new HashMap<>();
+            Employee employee = result.getEmployee();
+            
+            if (employee != null) {
+                empInfo.put("empId", employee.getEmpId());
+                empInfo.put("empName", employee.getEmpName());
+                empInfo.put("empMail", employee.getEmpMail());
+                empInfo.put("empRank", employee.getEmpRank());
+                empInfo.put("clickTime", result.getOpenDate());
+            } else {
+                // Employee가 null인 경우 기본값 설정
+                empInfo.put("empId", result.getEmpId());
+                empInfo.put("empName", "알 수 없음");
+                empInfo.put("empMail", "");
+                empInfo.put("empRank", "");
+                empInfo.put("clickTime", result.getOpenDate());
+            }
+            
+            return empInfo;
+        }).collect(Collectors.toList());
+    }
 } 

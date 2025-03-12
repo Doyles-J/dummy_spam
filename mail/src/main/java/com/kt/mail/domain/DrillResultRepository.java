@@ -35,4 +35,7 @@ public interface DrillResultRepository extends JpaRepository<DrillResult, Long> 
     );
 
     List<DrillResult> findByDrillInfo_DrillIdAndOpenYn(Integer drillId, String openYn);
+
+    List<DrillResult> findByDrillInfo_DrillIdAndEmployee_Department_DeptIdAndOpenYn(
+        Integer drillId, Integer deptId, String openYn);
 } 

@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpStatus;
 
 @RestController
 @RequestMapping("/drill")
@@ -114,5 +115,19 @@ public class DrillController {
     public ResponseEntity<?> getDrill(@PathVariable("drillId") Integer drillId) {
         // ... 메서드 내용 ...
         return null; // Placeholder return, actual implementation needed
+    }
+
+    @GetMapping("/{drillId}/clicked-employees")
+    public ResponseEntity<?> getClickedEmployees(
+        @PathVariable("drillId") Integer drillId, 
+        @RequestParam("deptId") Integer deptId) {
+        try {
+            List<Map<String, Object>> clickedEmployees = drillService.getClickedEmployees(drillId, deptId);
+            return ResponseEntity.ok(clickedEmployees);
+        } catch (Exception e) {
+            log.error("클릭한 사용자 정보 조회 실패. drillId: {}, deptId: {}", drillId, deptId, e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "클릭한 사용자 정보 조회에 실패했습니다."));
+        }
     }
 } 
