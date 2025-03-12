@@ -5,10 +5,12 @@ import { RouterLink, RouterView } from "vue-router";
 <template>
   <header class="header">
     <div class="header-container">
-      <div class="logo">
-        <img src="/logo.png" alt="Logo" class="logo-image" />
-        <span class="logo-text">지능형 위협메일 모의훈련</span>
-      </div>
+      <RouterLink to="/" custom v-slot="{ navigate }">
+        <div class="logo" @click="navigate" role="link">
+          <img src="/logo.png" alt="Logo" class="logo-image" />
+          <span class="logo-text">지능형 위협메일 모의훈련</span>
+        </div>
+      </RouterLink>
       <nav class="main-nav">
         <RouterLink to="/" class="nav-item">메인페이지</RouterLink>
         <RouterLink to="/sending" class="nav-item">발송</RouterLink>
@@ -83,6 +85,7 @@ import { RouterLink, RouterView } from "vue-router";
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: pointer;
 }
 
 .logo-image {
